@@ -29,10 +29,11 @@
       description:
         - Teaching Assistant for
           contents:
-            - CSCI 544 Applied Natural Language Processing
-            - CSCI 566 Deep Learning and its Applications
-            - CSCI 567 Machine Learning
-            - DSCI 552 Machine Learning for Data Science
+            items:
+              - CSCI 544 Applied Natural Language Processing
+              - CSCI 566 Deep Learning and its Applications
+              - CSCI 567 Machine Learning
+              - DSCI 552 Machine Learning for Data Science
 
 - title: Honors and Awards
   type: time_table
