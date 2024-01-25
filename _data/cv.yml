@@ -28,11 +28,11 @@
       institution: University of Southern California, Los Angeles, US
       year: 2022 - 
       description:
-        - title: CSCI 544 Applied Natural Language Processing
-        - title: CSCI 544 Applied Natural Language Processing
-        - title: CSCI 566 Deep Learning and its Applications
-        - title: CSCI 567 Machine Learning
-        - title: DSCI 552 Machine Learning for Data Science
+        - CSCI 544 Applied Natural Language Processing
+        - CSCI 544 Applied Natural Language Processing
+        - CSCI 566 Deep Learning and its Applications
+        - CSCI 567 Machine Learning
+        - DSCI 552 Machine Learning for Data Science
 
 - title: Honors and Awards
   type: time_table

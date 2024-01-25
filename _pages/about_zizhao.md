@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: Ph.D. student at <a href='https://www.isi.edu/'>USC/ISI</a>. Conquer entropy, reduce uncertainty. 
+subtitle: PhD student at <a href='https://www.isi.edu/'>USC/ISI</a>.
 
 profile:
   align: right
