@@ -11,14 +11,15 @@
   contents:
     - title: PhD
       institution: University of Southern California, Los Angeles, US
-      year: 2027(prospective)
+      year: 2027(est.)
       description:
         - CS, AI, Continual Learning
-    - title: Master of Science
+    - title: Master of Science in Computer Science
       institution: University of Southern California, Los Angeles, US
       year: 2022
-      description:
-        - Computer Science
+    - title: Bachelor of Science in Physics
+      institution: Georgia Tech, Atlanta, US
+      year: 2020
 
 - title: Experience
   type: time_table
@@ -37,29 +38,34 @@
 - title: Honors and Awards
   type: time_table
   contents:
-    - year: 1921
+    - year: 2018
       items: 
-        - Nobel Prize in Physics 
-        - Matteucci Medal
-    - year: 2029
-      items: 
-        - Max Planck Medal
+        - Joyce M. and Glenn A. Burdick Prize
 
 - title: Academic Interests
   type: nested_list
   contents:
     - title: Generative Modeling
       items: 
-        - Diffusion/Consistency Models, GAN, VAE
+        - Score-based Models(Diffusion/Consistency Models)
+        - Multimodal Generative Models
     - title: Life-long(Continual) Learning
-      items:
-        - Description 1.
-    - title: Neural Network Architecture
+    - title: Generative Model Architecture
+      items: 
+        - Sequential Models(RNN, Transformers)
+        - GAN
+        - VAE
     - title: Human-inspired Training Scheme
+      items:
+        - Meta-learning 
+    - title: Neural Science
+
 
     
 
 - title: Other Interests
   type: list
   contents:
-    - <u>Hobbies:</u> Soccer, K-Pop Dance
+    - <u>Hobbies:</u> Soccer, Dance
+    - <u>Engineering:</u> Computer Hardwares, Aerospace Engineering, Sustainable Energy 
+    - <u>Science:</u> Theoretic Physics, Human Biology, Medicine, Social Science
