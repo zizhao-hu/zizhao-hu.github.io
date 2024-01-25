@@ -2,45 +2,38 @@
   type: map
   contents:
     - name: Full Name
-      value: Albert Einstein
-    - name: Date of Birth
-      value: 14th March 1879
+      value: Zizhao Hu
     - name: Languages
-      value: English, German
+      value: English, Mandarin Chinese
 
 - title: Education
   type: time_table
   contents:
     - title: PhD
-      institution: University of Zurich, Zurich, Switzerland
-      year: 1905
+      institution: University of Southern California, Los Angeles, US
+      year: 2027(prospective)
       description:
-        - Description 1.
-        - Description 2.
-        - title: Description 3.
-          contents:
-            - Sub-description 1.
-            - Sub-description 2.
-    - title: Federal teaching diploma
-      institution: Eidgenössische Technische Hochschule, Zurich, Switzerland
-      year: 1900
+        - CS, AI, Continual Learning
+    - title: Master of Science
+      institution: University of Southern California, Los Angeles, US
+      year: 2022
       description:
-        - Description 1.
-        - Description 2.
+        - Computer Science
 
 - title: Experience
   type: time_table
   contents:
-    - title: Professor of Theoretical Physics
-      institution: Institute for Advanced Study, Princeton University
-      year: 1933 - 1955
+    - title: Teaching Assistant
+      institution: University of Southern California, Los Angeles, US
+      year: 2022 - 
       description:
-        - Description 1.
-        - Description 2.
-        - title: Description 3.
+        - Teaching Assistant for
           contents:
-            - Sub-description 1.
-            - Sub-description 2.
+            - CSCI 544 Applied Natural Language Processing
+            - CSCI 566 Deep Learning and its Applications
+            - CSCI 567 Machine Learning
+            - DSCI 552 Machine Learning for Data Science
+          
     - title: Visiting Professor
       institution: California Institute of Technology, Pasadena, California, US
       year: 1933
