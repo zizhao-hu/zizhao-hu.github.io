@@ -3,17 +3,15 @@
   contents:
     - name: Full Name
       value: Zizhao Hu
-    - name: Languages
-      value: English, Mandarin Chinese
 
 - title: Education
   type: time_table
   contents:
     - title: PhD
       institution: University of Southern California, Los Angeles, US
-      year: 2027(est.)
+      year: 2027
       description:
-        - CS, AI, Continual Learning
+        - COMPUTER SCIENCE
     - title: Master of Science in Computer Science
       institution: University of Southern California, Los Angeles, US
       year: 2022
@@ -21,7 +19,7 @@
       institution: Georgia Tech, Atlanta, US
       year: 2020
 
-- title: Experience
+- title: Service
   type: time_table
   contents:
     - title: Teaching Assistant
@@ -32,7 +30,15 @@
         - CSCI 544 Applied Natural Language Processing
         - CSCI 566 Deep Learning and its Applications
         - CSCI 567 Machine Learning
+        - CSCI 576 Multimedia Systems Design
         - DSCI 552 Machine Learning for Data Science
+    - title: Reviewer
+      year: 2024 - 
+      description:
+        - NeurIPS 2024
+        - ICLR 2024, 2025
+        - ICML 2024, 2025
+
 
 - title: Honors and Awards
   type: time_table
@@ -44,27 +50,23 @@
 - title: Academic Interests
   type: nested_list
   contents:
-    - title: Generative Modeling
+    - title: Multimodal Learning
       items: 
-        - Score-based Models(Diffusion/Consistency Models)
-        - Multimodal Generative Models
-    - title: Life-long(Continual) Learning
-    - title: Generative Model Architecture
-      items: 
-        - Sequential Models(RNN, Transformers)
-        - GAN
-        - VAE
-    - title: Human-inspired Training Scheme
+        - VLMs, MLLMs
+        - Synthetic Data Generation
+        - Modality Alignment
+        - Test time Adaptation
+    - title: Training Paradigms
       items:
-        - Meta-learning 
-    - title: Neural Science
-
+        - Internal Reasoning 
+        - Reinforcement Learning
+        - Continual Learning
 
     
 
 - title: Other Interests
   type: list
   contents:
-    - <u>Hobbies:</u> Soccer, Dance
+    - <u>Hobby:</u> Soccer, Dance
     - <u>Engineering:</u> Computer Hardwares, Aerospace Engineering, Sustainable Energy 
     - <u>Science:</u> Theoretic Physics, Human Biology, Medicine, Social Science
