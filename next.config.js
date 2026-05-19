@@ -3,9 +3,11 @@ const require = createRequire(import.meta.url);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    output: 'export',
     images: {
-        unoptimized: false,
+        unoptimized: true,
     },
+    trailingSlash: true,
     transpilePackages: ['lucide-react'],
     webpack: (config, { isServer }) => {
         if (!isServer) {

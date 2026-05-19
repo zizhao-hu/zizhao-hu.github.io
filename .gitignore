@@ -23,3 +23,4 @@ Thumbs.db
 # Build logs
 build_*.txt
 build_*.log
+out  # next static export
