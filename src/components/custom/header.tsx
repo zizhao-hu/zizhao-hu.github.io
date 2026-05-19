@@ -30,40 +30,50 @@ export const Header = (_props: HeaderProps) => {
     return pathname.startsWith(path);
   };
 
-  // Hide on scroll-down, reveal on scroll-up. Listens to window and every
-  // .overflow-y-auto scroll container so the behavior works whether the page
-  // scrolls the document or an inner container.
+  // Hide on scroll-down, reveal on scroll-up. We listen during the CAPTURE
+  // phase on document so we catch scroll events from any element (scroll
+  // events don't bubble, so a normal document listener would miss inner
+  // .overflow-y-auto containers — which is exactly what the home/research/
+  // projects/blogs pages use).
   useEffect(() => {
     const SCROLL_THRESHOLD = 40;
-    let lastY = 0;
+    const lastByEl = new WeakMap<EventTarget, number>();
     let ticking = false;
+    let pending: EventTarget | null = null;
 
-    const readY = (t: Window | HTMLElement) =>
-      t === window ? window.scrollY || document.documentElement.scrollTop : (t as HTMLElement).scrollTop;
+    const readY = (t: EventTarget): number => {
+      if (t === window || t === document) {
+        return window.scrollY || document.documentElement.scrollTop;
+      }
+      const el = t as HTMLElement;
+      return el.scrollTop ?? 0;
+    };
 
-    const update = (target: Window | HTMLElement) => {
-      const y = readY(target);
-      const dy = y - lastY;
-      if (Math.abs(dy) < 4) { ticking = false; return; }
-      if (mobileMenuOpen) { ticking = false; lastY = y; return; }
+    const tick = () => {
+      ticking = false;
+      const t = pending;
+      pending = null;
+      if (!t) return;
+      const y = readY(t);
+      const prev = lastByEl.get(t);
+      lastByEl.set(t, y);
+      if (prev === undefined) return;
+      const dy = y - prev;
+      if (Math.abs(dy) < 4) return;
+      if (mobileMenuOpen) return;
       if (y > SCROLL_THRESHOLD && dy > 0) setHidden(true);
       else if (dy < 0) setHidden(false);
-      lastY = y;
-      ticking = false;
     };
 
     const onScroll = (e: Event) => {
+      pending = e.target ?? window;
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => update((e.currentTarget as Window | HTMLElement) ?? window));
+      requestAnimationFrame(tick);
     };
 
-    const containers: (Window | HTMLElement)[] = [
-      window,
-      ...Array.from(document.querySelectorAll<HTMLElement>('.overflow-y-auto')),
-    ];
-    containers.forEach((c) => c.addEventListener('scroll', onScroll, { passive: true }));
-    return () => containers.forEach((c) => c.removeEventListener('scroll', onScroll));
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', onScroll, { capture: true } as EventListenerOptions);
   }, [mobileMenuOpen]);
 
   return (
