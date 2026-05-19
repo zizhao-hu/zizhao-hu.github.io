@@ -5,7 +5,7 @@ import { LanguageToggle } from "./language-toggle";
 import { Menu, X } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface HeaderProps {
   onHomeClick?: () => void;
@@ -23,15 +23,56 @@ export const Header = (_props: HeaderProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
   };
 
+  // Hide on scroll-down, reveal on scroll-up. Listens to window and every
+  // .overflow-y-auto scroll container so the behavior works whether the page
+  // scrolls the document or an inner container.
+  useEffect(() => {
+    const SCROLL_THRESHOLD = 40;
+    let lastY = 0;
+    let ticking = false;
+
+    const readY = (t: Window | HTMLElement) =>
+      t === window ? window.scrollY || document.documentElement.scrollTop : (t as HTMLElement).scrollTop;
+
+    const update = (target: Window | HTMLElement) => {
+      const y = readY(target);
+      const dy = y - lastY;
+      if (Math.abs(dy) < 4) { ticking = false; return; }
+      if (mobileMenuOpen) { ticking = false; lastY = y; return; }
+      if (y > SCROLL_THRESHOLD && dy > 0) setHidden(true);
+      else if (dy < 0) setHidden(false);
+      lastY = y;
+      ticking = false;
+    };
+
+    const onScroll = (e: Event) => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => update((e.currentTarget as Window | HTMLElement) ?? window));
+    };
+
+    const containers: (Window | HTMLElement)[] = [
+      window,
+      ...Array.from(document.querySelectorAll<HTMLElement>('.overflow-y-auto')),
+    ];
+    containers.forEach((c) => c.addEventListener('scroll', onScroll, { passive: true }));
+    return () => containers.forEach((c) => c.removeEventListener('scroll', onScroll));
+  }, [mobileMenuOpen]);
+
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-transparent">
+      <header
+        className={`sticky top-0 z-50 w-full bg-transparent transform transition-transform duration-300 ease-out ${
+          hidden ? '-translate-y-full' : 'translate-y-0'
+        }`}
+      >
         <div className="relative h-12 flex items-center px-3 sm:px-4">
           {/* Centered desktop nav */}
           <nav

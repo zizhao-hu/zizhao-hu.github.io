@@ -139,8 +139,13 @@
     animation: marquee-scroll 30s linear infinite;
   }
 
-  .marquee:hover .marquee-track {
-    animation-play-state: paused;
+  /* Pause-on-hover only on real-pointer devices. On touch devices a tap
+     would otherwise leave the :hover state stuck and freeze the marquee
+     after returning from a clicked link. */
+  @media (hover: hover) and (pointer: fine) {
+    .marquee:hover .marquee-track {
+      animation-play-state: paused;
+    }
   }
 
   @keyframes marquee-scroll {
