@@ -1,6 +1,7 @@
 'use client';
 
 import { ThemeToggle } from "./theme-toggle";
+import { LanguageToggle } from "./language-toggle";
 import { Menu, X } from "lucide-react";
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -66,8 +67,11 @@ export const Header = (_props: HeaderProps) => {
           </div>
 
           {/* Right side — absolute on desktop so nav stays truly centered */}
-          <div className="ml-auto flex items-center gap-1 md:absolute md:right-3">
-            <ThemeToggle />
+          <div className="ml-auto flex items-center gap-1.5 md:absolute md:right-3">
+            <div className="flex flex-col items-end gap-px">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-1.5 rounded-full hover:bg-foreground/5 text-muted-foreground transition-colors duration-200"

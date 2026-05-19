@@ -123,6 +123,25 @@
 
 @layer components {
 
+  /* Monochrome text flow — gradient of foreground shades, slides left → right */
+  .text-flow {
+    background: linear-gradient(90deg,
+      hsl(var(--foreground) / 0.25) 0%,
+      hsl(var(--foreground) / 1) 50%,
+      hsl(var(--foreground) / 0.25) 100%);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: text-flow 4s linear infinite;
+  }
+
+  @keyframes text-flow {
+    0%   { background-position: 100% 0%; }
+    100% { background-position: -100% 0%; }
+  }
+
   /* Brand Gradient Wave */
   .gradient-wave-bg {
     background: linear-gradient(-45deg, var(--brand-orange), var(--brand-blue), var(--brand-green), var(--brand-orange));

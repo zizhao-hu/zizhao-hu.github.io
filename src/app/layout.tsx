@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import '@/index.css';
 
 export const metadata: Metadata = {
@@ -49,9 +50,11 @@ export default function RootLayout({
             </head>
             <body>
                 <ThemeProvider>
-                    <div className="w-full h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
-                        {children}
-                    </div>
+                    <LanguageProvider>
+                        <div className="w-full h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                            {children}
+                        </div>
+                    </LanguageProvider>
                 </ThemeProvider>
             </body>
         </html>

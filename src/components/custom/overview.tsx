@@ -10,36 +10,22 @@ import {
   GeorgiaTechLogo, USCLogo, GoogleCloudLogo, ScaleAILogo, HandshakeAILogo,
   MetaLogo, OpenAILogo,
 } from './brand-logos';
+import { useLanguage } from '@/context/LanguageContext';
+import type { TranslationKey } from '@/lib/translations';
 
-const PILLARS = [
-  {
-    icon: Brain,
-    tag: 'memory',
-    title: 'Agentic Memory',
-    desc: 'Continual learning of AI agents — in-context learning, continual fine-tuning, and unlearning.',
-    accent: 'text-blue-500 dark:text-blue-400',
-  },
-  {
-    icon: Globe,
-    tag: 'world model',
-    title: 'World Model',
-    desc: 'In-context world models, adaptation to post-training task worlds, and adapting agents in evolving envs.',
-    accent: 'text-cyan-500 dark:text-cyan-400',
-  },
-  {
-    icon: Zap,
-    tag: 'latency',
-    title: 'Low-Latency AI',
-    desc: 'Efficient attention architectures, KV-cache compression, latent segmentation, and recurrent transformers.',
-    accent: 'text-amber-500 dark:text-amber-400',
-  },
-  {
-    icon: Shield,
-    tag: 'safety',
-    title: 'AI Safety',
-    desc: 'Synthetic data training, risks of multi-agent interaction, post-training guardrails, and AI behavioral study.',
-    accent: 'text-emerald-500 dark:text-emerald-400',
-  },
+type PillarKey = 'memory' | 'world' | 'latency' | 'safety';
+const PILLARS: {
+  icon: typeof Brain;
+  k: PillarKey;
+  tagKey: TranslationKey;
+  titleKey: TranslationKey;
+  descKey: TranslationKey;
+  accent: string;
+}[] = [
+  { icon: Brain,  k: 'memory',  tagKey: 'pillar.memory.tag',  titleKey: 'pillar.memory.title',  descKey: 'pillar.memory.desc',  accent: 'text-blue-500 dark:text-blue-400' },
+  { icon: Globe,  k: 'world',   tagKey: 'pillar.world.tag',   titleKey: 'pillar.world.title',   descKey: 'pillar.world.desc',   accent: 'text-cyan-500 dark:text-cyan-400' },
+  { icon: Zap,    k: 'latency', tagKey: 'pillar.latency.tag', titleKey: 'pillar.latency.title', descKey: 'pillar.latency.desc', accent: 'text-amber-500 dark:text-amber-400' },
+  { icon: Shield, k: 'safety',  tagKey: 'pillar.safety.tag',  titleKey: 'pillar.safety.title',  descKey: 'pillar.safety.desc',  accent: 'text-emerald-500 dark:text-emerald-400' },
 ];
 
 type PathStage = {
@@ -114,58 +100,18 @@ const PATH: PathStage[] = [
 type NewsItem = {
   date: string;
   tag: string;
-  title: string;
+  titleKey: TranslationKey;
   href?: string;
 };
 
 const NEWS: NewsItem[] = [
-  {
-    date: '2026-02',
-    tag: 'preprint',
-    title: 'Preprint released — "You Are an Expert": persona prompting and the hallucination tax',
-  },
-  {
-    date: '2026-03-24',
-    tag: 'The Register',
-    title: 'Telling an AI model that it\'s an expert makes it worse',
-    href: 'https://www.theregister.com/software/2026/03/24/telling-an-ai-model-that-its-an-expert-makes-it-worse/5226049',
-  },
-  {
-    date: '2026-03-24',
-    tag: 'Tencent News',
-    title: 'Coverage of the "expert prompting" paper on Tencent News',
-    href: 'https://news.qq.com/rain/a/20260324A062P600',
-  },
-  {
-    date: '2026-03',
-    tag: '36Kr',
-    title: '36Kr feature — persona prompting as a hallucination poison',
-    href: 'https://eu.36kr.com/zh/p/3736415004590339',
-  },
-  {
-    date: '2026-03',
-    tag: 'QbitAI',
-    title: 'QbitAI / Bilibili video walkthrough of the paper',
-    href: 'https://www.bilibili.com/video/BV1boXABxEJ4/',
-  },
-  {
-    date: '2026-03',
-    tag: 'X',
-    title: 'Discussion thread by @sukh_saroy',
-    href: 'https://x.com/sukh_saroy/status/2035761644270411994?s=20',
-  },
-  {
-    date: '2026-03',
-    tag: 'Yahoo Tech',
-    title: 'Turns out asking AI to play expert backfires',
-    href: 'https://tech.yahoo.com/ai/articles/turns-ask-ai-play-expert-142356526.html',
-  },
-  {
-    date: '2026-03',
-    tag: 'AIToday',
-    title: 'Coverage on AIToday',
-    href: 'https://www.aitoday.io/',
-  },
+  { date: '2026-05', tag: 'preprint',     titleKey: 'news.shred.title',    href: 'https://scholar.google.com/citations?view_op=view_citation&hl=en&user=A8J42tQAAAAJ&sortby=pubdate&citation_for_view=A8J42tQAAAAJ:Se3iqnhoufwC' },
+  { date: '2026-03', tag: 'preprint',     titleKey: 'news.preprint.title', href: 'https://arxiv.org/abs/2603.18507' },
+  { date: '2026-03', tag: 'coverage',     titleKey: 'news.coverage.title' },
+  { date: '2025-12', tag: 'fellowship',   titleKey: 'news.canary.leave.title' },
+  { date: '2025-10', tag: 'presentation', titleKey: 'news.icmi.title',     href: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ' },
+  { date: '2025-08', tag: 'fellowship',   titleKey: 'news.canary.join.title' },
+  { date: '2025-07', tag: 'fellowship',   titleKey: 'news.handshake.start.title' },
 ];
 
 const MEDIA = [
@@ -178,11 +124,11 @@ const MEDIA = [
   { name: 'AIToday', href: 'https://www.aitoday.io/', logo: '/images/media/aitoday.png', sizeClass: 'h-6 sm:h-7' },
 ];
 
-const LINKS = [
-  { href: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ', label: 'scholar', icon: BookOpen },
-  { href: 'https://linkedin.com/in/zizhao-hu', label: 'linkedin', icon: Linkedin },
-  { href: 'https://github.com/zizhao-hu', label: 'github', icon: Github },
-  { href: 'mailto:zizhaohu3@gmail.com', label: 'email', icon: Mail },
+const LINKS: { href: string; labelKey: TranslationKey; icon: typeof BookOpen }[] = [
+  { href: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ', labelKey: 'link.scholar',  icon: BookOpen },
+  { href: 'https://linkedin.com/in/zizhao-hu',                       labelKey: 'link.linkedin', icon: Linkedin },
+  { href: 'https://github.com/zizhao-hu',                             labelKey: 'link.github',   icon: Github },
+  { href: 'mailto:zizhaohu3@gmail.com',                                labelKey: 'link.email',    icon: Mail },
 ];
 
 type Collaborator = {
@@ -238,6 +184,7 @@ const COLLABORATORS: Collaborator[] = [
 ];
 
 export const Overview = () => {
+  const { t } = useLanguage();
   return (
     <div className="relative font-mono text-[13px] leading-relaxed text-foreground">
       {/* Subtle dot grid backdrop */}
@@ -270,83 +217,89 @@ export const Overview = () => {
               </h1>
               <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                 <MapPin className="w-3 h-3 animate-pulse" />
-                Los Angeles
+                {t('location')}
               </span>
             </div>
             <p className="text-[12.5px] text-muted-foreground">
-              CS PhD <span className="text-foreground">@</span> USC ·{' '}
+              {t('affiliation.prefix')} <span className="text-foreground">{t('affiliation.at')}</span> {t('affiliation.university')} ·{' '}
               <a
                 href="https://glamor-usc.github.io/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline decoration-dotted underline-offset-2 text-foreground hover:text-brand-orange transition-colors"
               >
-                GLAMOR Lab
+                {t('affiliation.lab')}
               </a>{' '}
-              · advised by{' '}
+              · {t('affiliation.advisor.prefix')}{' '}
               <a
                 href="https://jessethomason.com/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline decoration-dotted underline-offset-2 text-foreground hover:text-brand-orange transition-colors"
               >
-                Jesse Thomason
+                {t('affiliation.advisor.name')}
               </a>
             </p>
             <div className="flex flex-wrap gap-1.5 mt-0.5">
               {LINKS.map((l) => (
                 <a
-                  key={l.label}
+                  key={l.labelKey}
                   href={l.href}
                   target={l.href.startsWith('mailto:') ? undefined : '_blank'}
                   rel={l.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
-                  aria-label={l.label}
+                  aria-label={t(l.labelKey)}
                   className="group inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] text-muted-foreground border border-border bg-background hover:border-foreground/30 hover:text-foreground transition-colors"
                 >
                   <l.icon className="w-3 h-3 opacity-70 group-hover:opacity-100" />
-                  <span>{l.label}</span>
+                  <span>{t(l.labelKey)}</span>
                 </a>
               ))}
             </div>
           </div>
         </header>
 
+        {/* Featured quote */}
+        <blockquote className="mb-1.5 text-center">
+          <p className="text-[12px] italic leading-snug text-flow">
+            &ldquo;{t('quote.context')}&rdquo;
+          </p>
+        </blockquote>
+
         {/* Compact bio — merged tagline + areas */}
         <p className="mb-5 text-[11.5px] text-muted-foreground/90 leading-snug">
-          <span className="text-foreground font-semibold">Context is the new weight.</span>{' '}
-          Low-latency control of what to remember, forget, and explore{' '}
-          decides next-gen{' '}
-          <span className="text-foreground font-semibold">world-model-aware, self-improving</span>{' '}
-          AI. I work on{' '}
-          <span className="text-foreground font-semibold">continual learning</span>,{' '}
-          <span className="text-foreground font-semibold">unlearning</span>,{' '}
-          <span className="text-foreground font-semibold">memory management</span>, and{' '}
-          <span className="text-foreground font-semibold">task adaptation</span> — at the{' '}
-          <span className="text-foreground font-semibold">agentic context</span>{' '}
-          (in-context RL, harness) and{' '}
-          <span className="text-foreground font-semibold">model level</span>{' '}
-          (distillation, finetuning).
+          {t('bio.work.lead')} <span className="text-foreground font-semibold">{t('bio.work.posttraining')}</span>{t('bio.work.tail')}{' '}
+          <span className="text-foreground font-semibold">{t('bio.world')}</span>{' '}
+          {t('bio.ai')}{t('bio.iworkon')}{' '}
+          <span className="text-foreground font-semibold">{t('bio.continual')}</span>,{' '}
+          <span className="text-foreground font-semibold">{t('bio.unlearning')}</span>,{' '}
+          <span className="text-foreground font-semibold">{t('bio.memory_mgmt')}</span>,{' '}
+          <span className="text-foreground font-semibold">{t('bio.task_adapt')}</span>{' '}
+          {t('bio.atthe')}{' '}
+          <span className="text-foreground font-semibold">{t('bio.agentic_ctx')}</span>{' '}
+          {t('bio.parens_agent')} {t('bio.and_model')}{' '}
+          <span className="text-foreground font-semibold">{t('bio.model_level')}</span>{' '}
+          {t('bio.parens_model')}
         </p>
 
         {/* What I work on */}
-        <Section label="what i work on">
+        <Section label={t('section.work')}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {PILLARS.map((p) => (
               <article
-                key={p.tag}
+                key={p.k}
                 className="border border-border bg-background hover:border-foreground/30 transition-colors p-2"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                    {p.tag}
+                    {t(p.tagKey)}
                   </span>
                   <p.icon className={`w-3 h-3 ${p.accent}`} />
                 </div>
                 <h3 className="text-[11px] font-semibold text-foreground mb-0.5 leading-snug">
-                  {p.title}
+                  {t(p.titleKey)}
                 </h3>
                 <p className="text-[10px] leading-snug text-muted-foreground">
-                  {p.desc}
+                  {t(p.descKey)}
                 </p>
               </article>
             ))}
@@ -354,7 +307,7 @@ export const Overview = () => {
         </Section>
 
         {/* News & Media */}
-        <Section label="news & media">
+        <Section label={t('section.news')}>
           {/* Media banner — colored official logos */}
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-3">
             {MEDIA.map((m) => (
@@ -388,7 +341,7 @@ export const Overview = () => {
                     {n.tag}
                   </span>
                   <span className="text-[11px] text-foreground leading-snug">
-                    {n.title}
+                    {t(n.titleKey)}
                   </span>
                   {n.href && (
                     <ArrowUpRight className="w-3 h-3 ml-auto opacity-40 group-hover:opacity-80 transition-opacity flex-shrink-0" />
@@ -396,7 +349,7 @@ export const Overview = () => {
                 </div>
               );
               return (
-                <li key={n.date + n.title} className="group">
+                <li key={n.date + n.titleKey} className="group">
                   {n.href ? (
                     <a href={n.href} target="_blank" rel="noopener noreferrer" className="block hover:text-foreground transition-colors">
                       {inner}
@@ -411,7 +364,7 @@ export const Overview = () => {
         </Section>
 
         {/* My path */}
-        <Section label="my path">
+        <Section label={t('section.path')}>
           <ol className="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-3">
             {PATH.map((p, i) => {
               const Icon = p.icon;
@@ -459,7 +412,7 @@ export const Overview = () => {
         </Section>
 
         {/* Collaborators */}
-        <Section label="collaborators" lastSection>
+        <Section label={t('section.collab')} lastSection>
           <ul className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
             {COLLABORATORS.map((c) => {
               const Logo = c.Logo;

@@ -24,3 +24,4 @@ Thumbs.db
 build_*.txt
 build_*.log
 out  # next static export
+.claude/
