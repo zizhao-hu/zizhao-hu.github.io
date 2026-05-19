@@ -6,10 +6,6 @@ import {
   ArrowUpRight, MapPin,
   Atom, Bird, Bot, Layers, Wand2, Network, RefreshCw, Telescope,
 } from 'lucide-react';
-import {
-  GeorgiaTechLogo, USCLogo, GoogleCloudLogo, ScaleAILogo, HandshakeAILogo,
-  MetaLogo, OpenAILogo,
-} from './brand-logos';
 import { useLanguage } from '@/context/LanguageContext';
 import type { TranslationKey } from '@/lib/translations';
 
@@ -35,6 +31,7 @@ type PathStage = {
   context: string;
   accent: string;
   current?: boolean;
+  year?: string;
 };
 
 const PATH: PathStage[] = [
@@ -44,20 +41,23 @@ const PATH: PathStage[] = [
     title: 'Physics',
     context: 'photonics & metasurface design · dynamic systems',
     accent: 'text-blue-500 dark:text-blue-400',
+    year: '2016',
   },
   {
     tag: 'biophysics',
     icon: Bird,
-    title: 'Agile Systems · Animal Flight',
+    title: 'Agile Systems',
     context: 'bio-inspired flight, sensing, and locomotion',
     accent: 'text-emerald-500 dark:text-emerald-400',
+    year: '2018',
   },
   {
     tag: 'robotics',
     icon: Bot,
-    title: 'Robotics · Reinforcement Learning',
+    title: 'Robotics · RL',
     context: 'policy learning for physical control and agent behavior',
     accent: 'text-yellow-500 dark:text-yellow-400',
+    year: '2021',
   },
   {
     tag: 'vae',
@@ -65,6 +65,7 @@ const PATH: PathStage[] = [
     title: 'Continual Learning · VAE',
     context: 'regularization design for variational autoencoders',
     accent: 'text-amber-500 dark:text-amber-400',
+    year: '2022',
   },
   {
     tag: 'multimodal',
@@ -72,13 +73,15 @@ const PATH: PathStage[] = [
     title: 'Multimodal Generation',
     context: 'diffusion models · vision-language model architecture',
     accent: 'text-violet-500 dark:text-violet-400',
+    year: '2023',
   },
   {
-    tag: 'continual · multi-agent',
+    tag: 'multiagent',
     icon: Network,
-    title: 'Continual Learning · Multi-Agent',
+    title: 'Multiagent',
     context: 'coordination, division of labor, and mutual verification across agents — continual adaptation at the population level',
     accent: 'text-rose-500 dark:text-rose-400',
+    year: '2025',
   },
   {
     tag: 'agentic-memory',
@@ -87,11 +90,12 @@ const PATH: PathStage[] = [
     context: 'in-context learning, continual fine-tuning, unlearning, and memory scaffolds — adapting agents at the context and model level',
     accent: 'text-cyan-500 dark:text-cyan-400',
     current: true,
+    year: '2026',
   },
   {
     tag: 'horizon',
     icon: Telescope,
-    title: 'World Models · Low-Latency AI',
+    title: 'World Models',
     context: 'predictive world models and the architectures to serve them in real time',
     accent: 'text-brand-orange',
   },
@@ -104,12 +108,19 @@ type NewsItem = {
   href?: string;
 };
 
+const NEWS_TAG_COLOR: Record<string, string> = {
+  preprint:   'text-cyan-600 dark:text-cyan-400',
+  coverage:   'text-amber-600 dark:text-amber-400',
+  fellowship: 'text-emerald-600 dark:text-emerald-400',
+  talks:      'text-rose-600 dark:text-rose-400',
+};
+
 const NEWS: NewsItem[] = [
   { date: '2026-05', tag: 'preprint',     titleKey: 'news.shred.title',    href: 'https://scholar.google.com/citations?view_op=view_citation&hl=en&user=A8J42tQAAAAJ&sortby=pubdate&citation_for_view=A8J42tQAAAAJ:Se3iqnhoufwC' },
   { date: '2026-03', tag: 'preprint',     titleKey: 'news.preprint.title', href: 'https://arxiv.org/abs/2603.18507' },
   { date: '2026-03', tag: 'coverage',     titleKey: 'news.coverage.title' },
   { date: '2025-12', tag: 'fellowship',   titleKey: 'news.canary.leave.title' },
-  { date: '2025-10', tag: 'presentation', titleKey: 'news.icmi.title',     href: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ' },
+  { date: '2025-10', tag: 'talks',        titleKey: 'news.icmi.title',     href: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ' },
   { date: '2025-08', tag: 'fellowship',   titleKey: 'news.canary.join.title' },
   { date: '2025-07', tag: 'fellowship',   titleKey: 'news.handshake.start.title' },
 ];
@@ -133,54 +144,19 @@ const LINKS: { href: string; labelKey: TranslationKey; icon: typeof BookOpen }[]
 
 type Collaborator = {
   name: string;
-  role: string;
   href?: string;
-  Logo: (props: { className?: string }) => JSX.Element;
+  logo: string;
+  sizeClass: string;
 };
 
 const COLLABORATORS: Collaborator[] = [
-  {
-    name: 'Georgia Tech',
-    role: 'BS · alumni',
-    href: 'https://www.gatech.edu/',
-    Logo: GeorgiaTechLogo,
-  },
-  {
-    name: 'USC',
-    role: 'MS + PhD',
-    href: 'https://www.usc.edu/',
-    Logo: USCLogo,
-  },
-  {
-    name: 'Handshake AI',
-    role: 'fellow',
-    href: 'https://joinhandshake.com/',
-    Logo: HandshakeAILogo,
-  },
-  {
-    name: 'OpenAI',
-    role: 'client',
-    href: 'https://openai.com/',
-    Logo: OpenAILogo,
-  },
-  {
-    name: 'Meta',
-    role: 'client',
-    href: 'https://about.meta.com/',
-    Logo: MetaLogo,
-  },
-  {
-    name: 'Google Cloud',
-    role: 'sponsor',
-    href: 'https://cloud.google.com/',
-    Logo: GoogleCloudLogo,
-  },
-  {
-    name: 'Scale AI',
-    role: 'contractor',
-    href: 'https://scale.com/',
-    Logo: ScaleAILogo,
-  },
+  { name: 'Georgia Tech', href: 'https://www.gatech.edu/',     logo: '/images/collaborators/gatech.svg',      sizeClass: 'h-6 sm:h-7' },
+  { name: 'USC',          href: 'https://www.usc.edu/',         logo: '/images/collaborators/usc.png',         sizeClass: 'h-6 sm:h-7' },
+  { name: 'Handshake AI', href: 'https://joinhandshake.com/',  logo: '/images/collaborators/handshake.png',   sizeClass: 'h-7 sm:h-8' },
+  { name: 'OpenAI',       href: 'https://openai.com/',          logo: '/images/collaborators/openai.svg',      sizeClass: 'h-5 sm:h-6' },
+  { name: 'Meta',         href: 'https://about.meta.com/',     logo: '/images/collaborators/meta.svg',        sizeClass: 'h-3 sm:h-4' },
+  { name: 'Google Cloud', href: 'https://cloud.google.com/',   logo: '/images/collaborators/googlecloud.svg', sizeClass: 'h-5 sm:h-6' },
+  { name: 'Scale AI',     href: 'https://scale.com/',           logo: '/images/collaborators/scaleai.svg',     sizeClass: 'h-3 sm:h-4' },
 ];
 
 export const Overview = () => {
@@ -240,7 +216,7 @@ export const Overview = () => {
                 {t('affiliation.advisor.name')}
               </a>
             </p>
-            <div className="flex flex-wrap gap-1.5 mt-0.5">
+            <div className="flex flex-nowrap gap-1.5 mt-0.5">
               {LINKS.map((l) => (
                 <a
                   key={l.labelKey}
@@ -248,10 +224,11 @@ export const Overview = () => {
                   target={l.href.startsWith('mailto:') ? undefined : '_blank'}
                   rel={l.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
                   aria-label={t(l.labelKey)}
-                  className="group inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] text-muted-foreground border border-border bg-background hover:border-foreground/30 hover:text-foreground transition-colors"
+                  title={t(l.labelKey)}
+                  className="group inline-flex items-center gap-1.5 flex-shrink-0 px-1.5 sm:px-2 py-0.5 text-[11px] text-muted-foreground border border-border bg-background hover:border-foreground/30 hover:text-foreground transition-colors"
                 >
                   <l.icon className="w-3 h-3 opacity-70 group-hover:opacity-100" />
-                  <span>{t(l.labelKey)}</span>
+                  <span className="hidden sm:inline">{t(l.labelKey)}</span>
                 </a>
               ))}
             </div>
@@ -337,12 +314,14 @@ export const Overview = () => {
             {NEWS.map((n) => {
               const inner = (
                 <div className="flex items-baseline gap-2 py-1.5">
-                  <span className="text-[9px] uppercase tracking-wider text-foreground tabular-nums w-[76px] flex-shrink-0">
-                    {n.date}
-                  </span>
-                  <span className="text-[9px] uppercase tracking-wider px-1 py-px border border-border text-muted-foreground flex-shrink-0">
-                    {n.tag}
-                  </span>
+                  <div className="flex items-baseline gap-1 w-[124px] flex-shrink-0">
+                    <span className="text-[9px] uppercase tracking-wider text-foreground tabular-nums flex-shrink-0">
+                      {n.date}
+                    </span>
+                    <span className={`text-[9px] tracking-wider italic flex-shrink-0 ${NEWS_TAG_COLOR[n.tag] ?? 'text-muted-foreground/70'}`}>
+                      · {n.tag}
+                    </span>
+                  </div>
                   <span className="text-[11px] text-foreground leading-snug">
                     {t(n.titleKey)}
                   </span>
@@ -374,17 +353,26 @@ export const Overview = () => {
               const isLast = i === PATH.length - 1;
               return (
                 <li key={p.tag} className="relative">
-                  <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="flex items-end gap-1.5 mb-1.5 min-h-[24px]">
                     <div
                       className={`w-6 h-6 flex items-center justify-center border flex-shrink-0 ${
                         p.current
-                          ? 'border-brand-orange bg-brand-orange/10'
+                          ? 'border-emerald-500 bg-emerald-500/10 animate-pulse shadow-[0_0_0_2px_rgba(16,185,129,0.25)]'
                           : 'border-border bg-background'
                       }`}
                     >
                       <Icon className={`w-3 h-3 ${p.accent}`} />
                     </div>
-                    {!isLast && <span className="flex-1 h-px bg-border" />}
+                    {!isLast && (
+                      <div className="flex-1 flex flex-col justify-end pb-[5px]">
+                        {p.year && (
+                          <span className="text-[8.5px] tabular-nums text-muted-foreground leading-none mb-0.5">
+                            {p.year}
+                          </span>
+                        )}
+                        <span className="block h-px bg-border" />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-baseline gap-1 flex-wrap min-h-[12px]">
@@ -394,12 +382,6 @@ export const Overview = () => {
                     <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
                       {p.tag}
                     </span>
-                    {p.current && (
-                      <span className="text-[8px] font-semibold tracking-wider uppercase inline-flex items-center gap-0.5 px-1 py-px text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 bg-emerald-500/[0.08]">
-                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                        current
-                      </span>
-                    )}
                   </div>
 
                   <h3 className="text-[11px] font-semibold text-foreground mt-0.5 leading-snug">
@@ -414,45 +396,30 @@ export const Overview = () => {
           </ol>
         </Section>
 
-        {/* Collaborators */}
+        {/* Collaborators — scrolling marquee of official logos */}
         <Section label={t('section.collab')} lastSection>
-          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-            {COLLABORATORS.map((c) => {
-              const Logo = c.Logo;
-              const inner = (
-                <div className="flex items-center gap-2 border border-border bg-background hover:border-foreground/30 transition-colors p-1.5 h-full">
-                  <Logo className="w-7 h-7 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[11.5px] font-semibold text-foreground leading-tight truncate flex items-center gap-1">
-                      {c.name}
-                      {c.href && (
-                        <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity flex-shrink-0" />
-                      )}
-                    </div>
-                    <div className="text-[10.5px] text-muted-foreground leading-tight truncate">
-                      {c.role}
-                    </div>
-                  </div>
-                </div>
-              );
-              return (
-                <li key={c.name} className="group">
-                  {c.href ? (
-                    <a
-                      href={c.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block"
-                    >
-                      {inner}
-                    </a>
-                  ) : (
-                    inner
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          <div className="marquee">
+            <div className="marquee-track items-center gap-x-10">
+              {[...COLLABORATORS, ...COLLABORATORS].map((c, i) => (
+                <a
+                  key={`${c.name}-${i}`}
+                  href={c.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={c.name}
+                  title={c.name}
+                  aria-hidden={i >= COLLABORATORS.length ? true : undefined}
+                  className="block flex-shrink-0"
+                >
+                  <img
+                    src={c.logo}
+                    alt={c.name}
+                    className={`${c.sizeClass} w-auto max-w-[150px] object-contain`}
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
         </Section>
 
       </div>
