@@ -37,7 +37,7 @@ export const Projects = () => {
             style={{
               backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
               backgroundSize: '22px 22px',
-              color: 'hsl(var(--muted-foreground))',
+              color: 'hsl(0 0% 60%)',
               maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
             }}

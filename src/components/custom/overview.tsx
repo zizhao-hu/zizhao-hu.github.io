@@ -116,7 +116,7 @@ const NEWS: NewsItem[] = [
 
 const MEDIA = [
   { name: 'The Register', href: 'https://www.theregister.com/software/2026/03/24/telling-an-ai-model-that-its-an-expert-makes-it-worse/5226049', logo: '/images/media/theregister.svg', sizeClass: 'h-6 sm:h-7' },
-  { name: 'QbitAI', href: 'https://www.bilibili.com/video/BV1boXABxEJ4/', logo: '/images/media/qbitai.png', sizeClass: 'h-10 sm:h-12', blend: true },
+  { name: 'QbitAI', href: 'https://www.bilibili.com/video/BV1boXABxEJ4/', logo: '/images/media/qbitai.png', sizeClass: 'h-10 sm:h-12' },
   { name: 'Tencent News', href: 'https://news.qq.com/rain/a/20260324A062P600', logo: '/images/media/tencent.svg', sizeClass: 'h-6 sm:h-7' },
   { name: '36Kr', href: 'https://eu.36kr.com/zh/p/3736415004590339', logo: '/images/media/36kr.png', sizeClass: 'h-6 sm:h-7' },
   { name: 'X', href: 'https://x.com/sukh_saroy/status/2035761644270411994?s=20', logo: '/images/media/x.svg', sizeClass: 'h-5 sm:h-6' },
@@ -194,7 +194,7 @@ export const Overview = () => {
         style={{
           backgroundImage: 'radial-gradient(currentColor 1px, transparent 1px)',
           backgroundSize: '22px 22px',
-          color: 'hsl(var(--muted-foreground))',
+          color: 'hsl(0 0% 60%)',
           maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
           WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
         }}
@@ -266,7 +266,7 @@ export const Overview = () => {
         </blockquote>
 
         {/* Compact bio — merged tagline + areas */}
-        <p className="mb-5 text-[11.5px] text-muted-foreground/90 leading-snug">
+        <p className="mb-5 text-[11.5px] text-foreground leading-snug">
           {t('bio.work.lead')} <span className="text-foreground font-semibold">{t('bio.work.posttraining')}</span>{t('bio.work.tail')}{' '}
           <span className="text-foreground font-semibold">{t('bio.world')}</span>{' '}
           {t('bio.ai')}{t('bio.iworkon')}{' '}
@@ -308,25 +308,28 @@ export const Overview = () => {
 
         {/* News & Media */}
         <Section label={t('section.news')}>
-          {/* Media banner — colored official logos */}
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 mb-3">
-            {MEDIA.map((m) => (
-              <a
-                key={m.name}
-                href={m.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={m.name}
-                title={m.name}
-                className="block"
-              >
-                <img
-                  src={m.logo}
-                  alt={m.name}
-                  className={`${m.sizeClass} w-auto max-w-[140px] object-contain ${m.blend ? 'mix-blend-multiply dark:mix-blend-screen' : ''}`}
-                />
-              </a>
-            ))}
+          {/* Media banner — colored official logos, scrolling marquee, pauses on hover */}
+          <div className="marquee mb-3">
+            <div className="marquee-track items-center gap-x-8">
+              {[...MEDIA, ...MEDIA].map((m, i) => (
+                <a
+                  key={`${m.name}-${i}`}
+                  href={m.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={m.name}
+                  title={m.name}
+                  aria-hidden={i >= MEDIA.length ? true : undefined}
+                  className="block flex-shrink-0"
+                >
+                  <img
+                    src={m.logo}
+                    alt={m.name}
+                    className={`${m.sizeClass} w-auto max-w-[140px] object-contain`}
+                  />
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* News list — no box */}
@@ -334,7 +337,7 @@ export const Overview = () => {
             {NEWS.map((n) => {
               const inner = (
                 <div className="flex items-baseline gap-2 py-1.5">
-                  <span className="text-[9px] uppercase tracking-wider text-muted-foreground/80 tabular-nums w-[76px] flex-shrink-0">
+                  <span className="text-[9px] uppercase tracking-wider text-foreground tabular-nums w-[76px] flex-shrink-0">
                     {n.date}
                   </span>
                   <span className="text-[9px] uppercase tracking-wider px-1 py-px border border-border text-muted-foreground flex-shrink-0">
@@ -385,7 +388,7 @@ export const Overview = () => {
                   </div>
 
                   <div className="flex items-baseline gap-1 flex-wrap min-h-[12px]">
-                    <span className="text-[8.5px] uppercase tracking-wider text-muted-foreground/80 tabular-nums">
+                    <span className="text-[8.5px] uppercase tracking-wider text-foreground tabular-nums">
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <span className="text-[9px] uppercase tracking-wider text-muted-foreground">

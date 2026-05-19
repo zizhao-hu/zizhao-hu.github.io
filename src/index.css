@@ -10,8 +10,8 @@
     /* Brand colors from style.md — warm, earthy palette */
     --background: 48 33% 97%;
     /* #faf9f5 */
-    --foreground: 60 4% 8%;
-    /* #141413 */
+    --foreground: 0 0% 0%;
+    /* pure black */
     --card: 48 33% 97%;
     --card-foreground: 60 4% 8%;
     --popover: 48 33% 97%;
@@ -24,8 +24,8 @@
     --secondary-foreground: 60 4% 8%;
     --muted: 45 19% 90%;
     /* #e8e6dc */
-    --muted-foreground: 48 5% 40%;
-    /* #6b6966 — readable gray */
+    --muted-foreground: 0 0% 0%;
+    /* match --foreground so all text reads pure black in light mode */
     --accent: 17 60% 60%;
     /* #d97757 — brand orange */
     --accent-foreground: 48 33% 97%;
@@ -59,8 +59,8 @@
   .dark {
     --background: 60 4% 8%;
     /* #141413 */
-    --foreground: 48 33% 97%;
-    /* #faf9f5 */
+    --foreground: 0 0% 100%;
+    /* pure white */
     --card: 60 3% 11%;
     --card-foreground: 48 33% 97%;
     --popover: 60 3% 11%;
@@ -70,8 +70,8 @@
     --secondary: 60 3% 15%;
     --secondary-foreground: 48 33% 97%;
     --muted: 60 3% 15%;
-    --muted-foreground: 48 5% 75%;
-    /* #c2c0b8 — readable on dark */
+    --muted-foreground: 0 0% 100%;
+    /* match --foreground so all text reads pure white in dark mode */
     --accent: 17 60% 60%;
     /* brand orange */
     --accent-foreground: 48 33% 97%;
@@ -122,6 +122,31 @@
 }
 
 @layer components {
+
+  /* Horizontal marquee — infinite scroll, pause on hover.
+     We deliberately avoid mask-image / filter / opacity / transform on the
+     wrapper because each creates a stacking context that breaks descendant
+     mix-blend-mode. Edge fade is done with absolutely-positioned gradient
+     overlays in JSX instead. */
+  .marquee {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll 30s linear infinite;
+  }
+
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+
+  @keyframes marquee-scroll {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+  }
 
   /* Monochrome text flow — gradient of foreground shades, slides left → right */
   .text-flow {
