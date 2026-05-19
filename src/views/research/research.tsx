@@ -2,38 +2,55 @@
 
 import { Header } from "@/components/custom/header";
 import {
-  ArrowUpRight, Brain, Database, Zap,
+  ArrowUpRight, Brain, Globe, Zap, Shield,
 } from "lucide-react";
 
 const DIRECTIONS = [
   {
     icon: Brain,
-    tag: 'memory · context · harness',
-    title: 'Agentic Memory · Context · Harness',
-    desc: 'Continual learning across all three agentic layers — model memory (KV cache, weights, unlearning), context (skills, instructions), and harness (driver code, tools).',
+    tag: 'memory',
+    title: 'Agentic Memory',
+    desc: 'Continual learning of AI agents — in-context learning, continual fine-tuning, and unlearning.',
     accent: 'text-blue-500 dark:text-blue-400',
+  },
+  {
+    icon: Globe,
+    tag: 'world model',
+    title: 'World Model',
+    desc: 'In-context world models, adaptation to post-training task worlds, and adapting agents in evolving envs.',
+    accent: 'text-cyan-500 dark:text-cyan-400',
   },
   {
     icon: Zap,
     tag: 'latency',
     title: 'Low-Latency AI',
-    desc: 'Efficient attention architectures, KV-cache compression, and recurrent transformers.',
+    desc: 'Efficient attention architectures, KV-cache compression, latent segmentation, and recurrent transformers.',
     accent: 'text-amber-500 dark:text-amber-400',
   },
   {
-    icon: Database,
-    tag: 'data',
-    title: 'Synthetic Data · Behavior Steering',
-    desc: 'Generate-validate pipelines, model-collapse prevention, and steering model behavior toward safety and personalization.',
+    icon: Shield,
+    tag: 'safety',
+    title: 'AI Safety',
+    desc: 'Synthetic data training, risks of multi-agent interaction, post-training guardrails, and AI behavioral study.',
     accent: 'text-emerald-500 dark:text-emerald-400',
   },
 ];
+
+type Category = 'memory' | 'world model' | 'latency' | 'safety';
+
+const CATEGORY_ACCENT: Record<Category, string> = {
+  'memory': 'text-blue-500 dark:text-blue-400 border-blue-500/30 bg-blue-500/[0.06]',
+  'world model': 'text-cyan-500 dark:text-cyan-400 border-cyan-500/30 bg-cyan-500/[0.06]',
+  'latency': 'text-amber-500 dark:text-amber-400 border-amber-500/30 bg-amber-500/[0.06]',
+  'safety': 'text-emerald-500 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/[0.06]',
+};
 
 type Paper = {
   year: number;
   title: string;
   venue: string;
   type: 'conference' | 'preprint' | 'in-progress';
+  category: Category;
   summary: string;
   link?: string;
   highlight?: boolean;
@@ -46,22 +63,27 @@ const PAPERS: Paper[] = [
     title: 'SHRED: Document Unlearning via Self-Distillation and Entropy Demotion',
     venue: 'in submission · NeurIPS 2026',
     type: 'in-progress',
+    category: 'memory',
     summary:
       'A document-level unlearning method that combines self-distillation on retain data with entropy demotion on the forget set. Removes targeted knowledge from LLMs without catastrophic damage to unrelated capabilities.',
+    link: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ',
   },
   {
     year: 2026,
-    title: 'PRISM: Probe-guided Iterative Smoothness Minimization for Persona Routing',
-    venue: 'in progress',
+    title: 'Expert Personas Improve LLM Alignment but Damage Accuracy: Bootstrapping Intent-Based Persona Routing with PRISM',
+    venue: 'in submission · EMNLP 2026',
     type: 'in-progress',
+    category: 'safety',
     summary:
-      'A framework for efficient persona routing in LLMs that enforces dual-space smoothness — across instruction inputs and behavior outputs — via lightweight probes. Targets controllable behavior without full retraining.',
+      'Persona effectiveness is task-type dependent: expert prompts consistently improve alignment-dependent tasks (safety, preference) but reliably damage pretraining-dependent knowledge retrieval. PRISM teaches models when to invoke a persona via intent-based self-modeling, preserving accuracy while keeping alignment gains.',
+    link: 'https://arxiv.org/abs/2603.18507',
   },
   {
     year: 2026,
     title: 'AttendTwice: Long-Context Inference via Dynamic Token-Level KV-Cache Selection',
     venue: 'in progress',
     type: 'in-progress',
+    category: 'latency',
     summary:
       'A two-pass attention scheme that dynamically selects which KV-cache tokens to attend to per query, enabling long-context inference at a fraction of the standard memory footprint.',
   },
@@ -70,6 +92,7 @@ const PAPERS: Paper[] = [
     title: 'Multimodal Synthetic Data Finetuning and Model Collapse',
     venue: 'ACM ICMI 2025',
     type: 'conference',
+    category: 'safety',
     summary:
       'Studies how vision-language models degrade when fine-tuned on AI-generated multimodal data. Characterizes the collapse dynamics specific to the multimodal regime and proposes mitigation strategies that preserve diversity across modalities.',
     link: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ',
@@ -80,6 +103,7 @@ const PAPERS: Paper[] = [
     title: 'Lateralization MLP: A Simple Brain-inspired Architecture for Diffusion',
     venue: 'preprint',
     type: 'preprint',
+    category: 'latency',
     summary:
       'A brain-inspired MLP architecture with hemispheric lateralization applied to diffusion models. Shows competitive sample quality at reduced parameter count, suggesting structured asymmetry as an inductive bias for generative modeling.',
     link: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ',
@@ -89,6 +113,7 @@ const PAPERS: Paper[] = [
     title: 'Static Key Attention in Vision',
     venue: 'preprint',
     type: 'preprint',
+    category: 'latency',
     summary:
       'A more efficient attention variant for vision transformers that pre-computes a static key projection, reducing per-token compute while maintaining downstream task performance.',
     link: 'https://scholar.google.com/citations?user=A8J42tQAAAAJ',
@@ -96,7 +121,7 @@ const PAPERS: Paper[] = [
 ];
 
 const SERVICE = [
-  'Reviewer · NeurIPS 2024–2025',
+  'Reviewer · NeurIPS 2024–2026',
   'Reviewer · ICLR 2024–2025',
   'Reviewer · ICML 2024–2025',
   'TA · DSCI 552 (USC)',
@@ -125,22 +150,22 @@ export const Research = () => {
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 py-10">
             {/* Directions — same pillars as the front page */}
             <Section label="directions">
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {DIRECTIONS.map((d) => (
                   <article
                     key={d.tag}
-                    className="border border-border bg-background hover:border-foreground/30 transition-colors p-3"
+                    className="border border-border bg-background hover:border-foreground/30 transition-colors p-2"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[9px] uppercase tracking-wider text-muted-foreground">
                         {d.tag}
                       </span>
-                      <d.icon className={`w-3.5 h-3.5 ${d.accent}`} />
+                      <d.icon className={`w-3 h-3 ${d.accent}`} />
                     </div>
-                    <h3 className="text-[13px] font-semibold text-foreground mb-1.5">
+                    <h3 className="text-[11px] font-semibold text-foreground mb-0.5 leading-snug">
                       {d.title}
                     </h3>
-                    <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+                    <p className="text-[10px] leading-snug text-muted-foreground">
                       {d.desc}
                     </p>
                   </article>
@@ -165,22 +190,9 @@ export const Research = () => {
                       <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
                         {p.year}
                       </span>
-                      <span
-                        className={`text-[9.5px] uppercase tracking-wider px-1.5 py-px ${
-                          p.type === 'conference'
-                            ? 'text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 bg-emerald-500/[0.08]'
-                            : p.type === 'in-progress'
-                              ? 'text-amber-700 dark:text-amber-400 border border-amber-500/30 bg-amber-500/[0.08]'
-                              : 'text-muted-foreground border border-border'
-                        }`}
-                      >
-                        {p.type}
+                      <span className={`text-[9.5px] uppercase tracking-wider px-1.5 py-px border ${CATEGORY_ACCENT[p.category]}`}>
+                        {p.category}
                       </span>
-                      {p.highlight && (
-                        <span className="text-[9.5px] uppercase tracking-wider px-1.5 py-px text-brand-orange border border-brand-orange/40 bg-brand-orange/[0.06]">
-                          featured
-                        </span>
-                      )}
                       <span className="ml-auto text-[10.5px] text-muted-foreground/80 italic">
                         {p.venue}
                       </span>

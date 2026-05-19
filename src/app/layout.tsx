@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/context/ThemeContext';
-import { FloatingChatWrapper } from '@/components/custom/floating-chat-wrapper';
 import '@/index.css';
 
 export const metadata: Metadata = {
@@ -53,7 +52,6 @@ export default function RootLayout({
                     <div className="w-full h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                         {children}
                     </div>
-                    <FloatingChatWrapper />
                 </ThemeProvider>
             </body>
         </html>
