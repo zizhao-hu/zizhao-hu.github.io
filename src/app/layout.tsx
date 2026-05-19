@@ -51,7 +51,7 @@ export default function RootLayout({
             <body>
                 <ThemeProvider>
                     <LanguageProvider>
-                        <div className="w-full h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+                        <div className="w-full h-screen overflow-x-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                             {children}
                         </div>
                     </LanguageProvider>

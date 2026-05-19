@@ -216,7 +216,8 @@ export const Overview = () => {
                 {t('affiliation.advisor.name')}
               </a>
             </p>
-            <div className="flex flex-nowrap gap-1.5 mt-0.5">
+            {/* Desktop contacts — inline with the hero column */}
+            <div className="hidden sm:flex flex-nowrap gap-1.5 mt-0.5">
               {LINKS.map((l) => (
                 <a
                   key={l.labelKey}
@@ -225,15 +226,32 @@ export const Overview = () => {
                   rel={l.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
                   aria-label={t(l.labelKey)}
                   title={t(l.labelKey)}
-                  className="group inline-flex items-center gap-1.5 flex-shrink-0 px-1.5 sm:px-2 py-0.5 text-[11px] text-muted-foreground border border-border bg-background hover:border-foreground/30 hover:text-foreground transition-colors"
+                  className="group inline-flex items-center gap-1.5 flex-shrink-0 px-2 py-0.5 text-[11px] text-muted-foreground border border-border bg-background hover:border-foreground/30 hover:text-foreground transition-colors"
                 >
                   <l.icon className="w-3 h-3 opacity-70 group-hover:opacity-100" />
-                  <span className="hidden sm:inline">{t(l.labelKey)}</span>
+                  <span>{t(l.labelKey)}</span>
                 </a>
               ))}
             </div>
           </div>
         </header>
+
+        {/* Mobile contacts — full-width row below the hero */}
+        <div className="grid grid-cols-4 gap-1.5 mb-3 sm:hidden">
+          {LINKS.map((l) => (
+            <a
+              key={l.labelKey}
+              href={l.href}
+              target={l.href.startsWith('mailto:') ? undefined : '_blank'}
+              rel={l.href.startsWith('mailto:') ? undefined : 'noopener noreferrer'}
+              aria-label={t(l.labelKey)}
+              title={t(l.labelKey)}
+              className="group inline-flex items-center justify-center py-1 text-[11px] text-muted-foreground border border-border bg-background hover:border-foreground/30 hover:text-foreground transition-colors"
+            >
+              <l.icon className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+            </a>
+          ))}
+        </div>
 
         {/* Featured quote */}
         <blockquote className="mb-1.5 text-center">
