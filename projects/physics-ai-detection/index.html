@@ -1,0 +1,253 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/images/projects/vlmdraw-depth.png"/><link rel="preload" as="image" href="/images/projects/vlmdraw-brightness.png"/><link rel="preload" as="image" href="/images/projects/vlmdraw-light.png"/><link rel="stylesheet" href="/_next/static/css/a6b4ff8e26634940.css" data-precedence="next"/><link rel="preload" as="script" fetchPriority="low" href="/_next/static/chunks/webpack-cccb9f7275ec0b04.js"/><script src="/_next/static/chunks/fd9d1056-c1a584716815e417.js" async=""></script><script src="/_next/static/chunks/2117-0660962780410442.js" async=""></script><script src="/_next/static/chunks/main-app-e053a265ecd7fa88.js" async=""></script><script src="/_next/static/chunks/2370-4b75fdf839d102e4.js" async=""></script><script src="/_next/static/chunks/5811-d637ab8e4908ce24.js" async=""></script><script src="/_next/static/chunks/962-c295223d31058e53.js" async=""></script><script src="/_next/static/chunks/9930-d174b851c072d57c.js" async=""></script><script src="/_next/static/chunks/8329-6e687e23dac240da.js" async=""></script><script src="/_next/static/chunks/app/projects/%5Bslug%5D/page-64488cf9b158e54c.js" async=""></script><script src="/_next/static/chunks/app/layout-251aa3eefa7a2c5b.js" async=""></script><link rel="icon" type="image/svg+xml" href="/favicon.svg"/><title>Physics-Based AI Image Detection — Zizhao.md</title><meta name="description" content="Detecting AI-generated images through physics-based reasoning — analyzing depth maps, brightness-depth consistency, and light estimation to expose how AI fails to model real-world physics. A 3-feature classifier achieves 68.3% accuracy with just depth gradients and brightness edge analysis."/><meta name="author" content="Zizhao Hu"/><meta name="keywords" content="Zizhao Hu,AI researcher,USC PhD,model unlearning,safety alignment,post-training,LLM,VLM,KV cache,synthetic data,GLAMOR Lab,Jesse Thomason"/><meta name="robots" content="index, follow"/><meta property="og:title" content="Zizhao.md"/><meta property="og:description" content="CS PhD at USC GLAMOR Lab. Model unlearning, safety alignment, post-training for LLMs and VLMs."/><meta property="og:site_name" content="Zizhao.md"/><meta property="og:locale" content="en_US"/><meta property="og:type" content="website"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="Zizhao.md"/><meta name="twitter:description" content="CS PhD at USC GLAMOR Lab. Model unlearning, safety alignment, post-training for LLMs and VLMs."/><link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Poppins:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><script src="/_next/static/chunks/polyfills-42372ed130431b0a.js" noModule=""></script></head><body><div class="w-full h-screen overflow-x-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-white"><div class="flex flex-col min-h-dvh bg-background"><header class="sticky top-0 z-50 w-full bg-transparent transform transition-transform duration-300 ease-out translate-y-0"><div class="relative h-12 flex items-center px-3 sm:px-4"><nav class="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-0.5 rounded-full bg-muted/30 border border-border/60 p-1 shadow-sm backdrop-blur-sm" role="navigation" aria-label="Primary"><button class="
+                    relative px-3.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.12em]
+                    transition-all duration-300 ease-out
+                    text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                  "><span class="relative z-10">about</span></button><button class="
+                    relative px-3.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.12em]
+                    transition-all duration-300 ease-out
+                    text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                  "><span class="relative z-10">research</span></button><button aria-current="page" class="
+                    relative px-3.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.12em]
+                    transition-all duration-300 ease-out
+                    text-background bg-foreground shadow-[0_1px_2px_rgba(0,0,0,0.08)]
+                  "><span class="relative z-10">projects</span></button><button class="
+                    relative px-3.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.12em]
+                    transition-all duration-300 ease-out
+                    text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                  "><span class="relative z-10">blogs</span></button><button class="
+                    relative px-3.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.12em]
+                    transition-all duration-300 ease-out
+                    text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                  "><span class="relative z-10">tools</span></button><button class="
+                    relative px-3.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.12em]
+                    transition-all duration-300 ease-out
+                    text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                  "><span class="relative z-10">quote</span></button><button aria-label="Internal" title="Internal" class="relative inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-all duration-300 ease-out"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock w-[13px] h-[13px]"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span class="relative z-10">internal</span></button></nav><div class="md:hidden flex-1 font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">projects</div><div class="ml-auto flex items-center gap-1.5 md:absolute md:right-3"><div class="inline-flex items-center gap-0.5 rounded-full bg-muted/30 border border-border/60 p-1 shadow-sm backdrop-blur-sm"><button type="button" aria-label="Switch to 中文" title="中文" class="relative inline-flex items-center justify-center px-3.5 py-1 overflow-hidden rounded-full font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors duration-200 ease-out"><span class="invisible" aria-hidden="true">EN</span><span class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out translate-y-0 opacity-100">EN</span><span class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out translate-y-full opacity-0">中</span></button><button type="button" aria-label="Switch to dark mode" title="Dark mode" class="relative inline-flex items-center justify-center px-3 py-1 overflow-hidden rounded-full font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors duration-200 ease-out"><span class="invisible" aria-hidden="true">EN</span><span class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out translate-y-0 opacity-100"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun w-3.5 h-3.5"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg></span><span class="absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out translate-y-full opacity-0"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon w-3.5 h-3.5"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span></button></div><button class="md:hidden p-1.5 rounded-full hover:bg-foreground/5 text-muted-foreground transition-colors duration-200" aria-label="Toggle menu" aria-expanded="false"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu w-4 h-4"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button></div></div></header><div class="md:hidden overflow-hidden sticky top-[48px] z-40 bg-background/95 backdrop-blur-md transition-[max-height,opacity] duration-300 ease-out max-h-0 opacity-0 pointer-events-none"><nav class="px-2 py-2 flex flex-col gap-1 font-mono"><button class="
+                  w-full text-left px-3 py-2 rounded-full text-[12px] uppercase tracking-[0.12em]
+                  transition-colors duration-200
+                  text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                ">about</button><button class="
+                  w-full text-left px-3 py-2 rounded-full text-[12px] uppercase tracking-[0.12em]
+                  transition-colors duration-200
+                  text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                ">research</button><button aria-current="page" class="
+                  w-full text-left px-3 py-2 rounded-full text-[12px] uppercase tracking-[0.12em]
+                  transition-colors duration-200
+                  text-background bg-foreground
+                ">projects</button><button class="
+                  w-full text-left px-3 py-2 rounded-full text-[12px] uppercase tracking-[0.12em]
+                  transition-colors duration-200
+                  text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                ">blogs</button><button class="
+                  w-full text-left px-3 py-2 rounded-full text-[12px] uppercase tracking-[0.12em]
+                  transition-colors duration-200
+                  text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                ">tools</button><button class="
+                  w-full text-left px-3 py-2 rounded-full text-[12px] uppercase tracking-[0.12em]
+                  transition-colors duration-200
+                  text-muted-foreground hover:text-foreground hover:bg-foreground/5
+                ">quote</button><button class="w-full text-left px-3 py-2 rounded-full text-[12px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors duration-200 inline-flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock w-3.5 h-3.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> internal</button></nav></div><main class="flex-1 overflow-y-auto pb-24"><div class="max-w-4xl mx-auto px-4 sm:px-6 py-6"><button class="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-6 font-heading"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left w-3 h-3"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>Back to Projects</button><div class="mb-8"><div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan-eye w-5 h-5 text-brand-orange"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><circle cx="12" cy="12" r="1"></circle><path d="M18.944 12.33a1 1 0 0 0 0-.66 7.5 7.5 0 0 0-13.888 0 1 1 0 0 0 0 .66 7.5 7.5 0 0 0 13.888 0"></path></svg></div><div><div class="flex items-center gap-2 flex-wrap"><h1 class="text-xl sm:text-2xl font-bold font-heading text-foreground">Physics-Based AI Image Detection</h1><span class="px-2 py-0.5 text-[10px] font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Active</span></div></div></div><p class="text-sm text-muted-foreground leading-relaxed mb-4">Detecting AI-generated images through physics-based reasoning — analyzing depth maps, brightness-depth consistency, and light estimation to expose how AI fails to model real-world physics. A 3-feature classifier achieves 68.3% accuracy with just depth gradients and brightness edge analysis.</p><div class="flex flex-wrap gap-1.5 mb-4"><span class="px-2 py-0.5 text-[10px] rounded font-heading bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400">Computer Vision</span><span class="px-2 py-0.5 text-[10px] rounded font-heading bg-fuchsia-100 dark:bg-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-400">AI Detection</span><span class="px-2 py-0.5 text-[10px] rounded font-heading bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">Physics-Based</span><span class="px-2 py-0.5 text-[10px] rounded font-heading bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400">Depth Estimation</span><span class="px-2 py-0.5 text-[10px] rounded font-heading bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400">Research</span></div><div class="flex gap-4"><a href="https://github.com/zizhao-hu/vlmdraw" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-heading"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-github w-3.5 h-3.5"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path d="M9 18c-4.51 2-5-2-7-2"></path></svg>View on GitHub</a></div></div><div class="h-px bg-border mb-8"></div><article class="prose prose-sm dark:prose-invert max-w-none prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-p:leading-relaxed prose-a:text-brand-orange prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-code:text-brand-orange prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-pre:bg-muted prose-pre:border prose-pre:border-border prose-pre:rounded-xl prose-img:rounded-xl prose-img:border prose-img:border-border prose-table:text-xs prose-th:text-foreground prose-th:font-heading prose-th:text-left prose-td:text-muted-foreground prose-li:text-muted-foreground prose-blockquote:border-brand-orange prose-blockquote:text-muted-foreground "><h1>Physics-Based AI Image Detection</h1>
+<p>Can you detect AI-generated images by checking if they obey the laws of physics? That&#x27;s the core question behind this project.</p>
+<h2>The Insight</h2>
+<p>AI image generators (DALL-E, Midjourney, Stable Diffusion) produce visually stunning images — but they don&#x27;t actually understand physics. They approximate what scenes <em>look like</em> without modeling how light, depth, and surface interactions <em>actually work</em>.</p>
+<p>This project exploits that gap.</p>
+<h2>Three Physics Pipelines</h2>
+<p>We extract 27 features from three complementary physics-based analysis pipelines, applied to 30 real images (COCO) and 30 AI-generated images (AIGenBench):</p>
+<h3>1. Depth Map Statistics</h3>
+<p>Using monocular depth estimation, we analyze the statistical properties of predicted depth maps:</p>
+<ul>
+<li><strong>gradient mean/std</strong> — how sharply depth transitions occur</li>
+<li><strong>skewness/kurtosis</strong> — asymmetry and tail behavior of depth distributions</li>
+<li><strong>entropy</strong> — information content of the depth field</li>
+</ul>
+<h3>2. Brightness-Depth Consistency</h3>
+<p>In real photographs, brightness and depth are physically coupled — objects farther away tend to have different illumination characteristics. We measure:</p>
+<ul>
+<li><strong>Pearson/Spearman correlation</strong> between brightness and depth</li>
+<li><strong>Local patch correlations</strong> — spatial consistency of the brightness-depth relationship</li>
+<li><strong>Brightness at depth edges</strong> — what happens to brightness where depth changes sharply</li>
+</ul>
+<h3>3. Light Estimation</h3>
+<p>Real scenes have consistent lighting from a single dominant source. AI-generated images often have subtle inconsistencies:</p>
+<ul>
+<li><strong>Global residual</strong> — how well a single light model fits the scene</li>
+<li><strong>Angular deviation</strong> — variance in estimated light direction across patches</li>
+<li><strong>Fraction anomalous patches</strong> — percentage of regions with inconsistent lighting</li>
+</ul>
+<h2>Key Findings</h2>
+<h3>The Paradox of AI Images</h3>
+<p><img src="/images/projects/vlmdraw-depth.png" alt="Depth Map Statistics: Real vs. AI-Generated"/></p>
+<p><strong>AI-generated images are simultaneously too consistent AND too sharp:</strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Finding</th><th>What It Means</th></tr></thead><tbody><tr><td><strong>Smooth brightness-depth</strong></td><td>AI produces overly uniform brightness-depth relationships (d=0.445)</td></tr><tr><td><strong>Symmetric depth distributions</strong></td><td>Real images have skewed depth (0.556 vs 0.236) — AI makes everything too balanced</td></tr><tr><td><strong>More uniform lighting</strong></td><td>Fewer anomalous patches in AI images (41% vs 51%)</td></tr><tr><td><strong>But sharper depth gradients</strong></td><td>AI images have abrupt depth transitions (d=0.653) — the strongest signal</td></tr></tbody></table>
+<p>The last finding is the most interesting: <strong>AI generators create sharp, almost cartoon-like depth boundaries</strong> because they haven&#x27;t learned that real-world depth transitions are gradual (due to actual 3D geometry, not learned textures).</p>
+<h3>Feature Ranking by Effect Size</h3>
+<p>The top discriminative features ranked by Cohen&#x27;s d:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Rank</th><th>Feature</th><th>Cohen&#x27;s d</th><th>Direction</th></tr></thead><tbody><tr><td>1</td><td>Depth gradient mean</td><td><strong>0.653</strong></td><td>Fake &gt; Real</td></tr><tr><td>2</td><td>Brightness at depth edges</td><td><strong>0.547</strong></td><td>Real &gt; Fake</td></tr><tr><td>3</td><td>Local correlation (abs mean)</td><td>0.445</td><td>Fake &gt; Real</td></tr><tr><td>4</td><td>Fraction strong correlation</td><td>0.428</td><td>Fake &gt; Real</td></tr><tr><td>5</td><td>Gradient magnitude correlation</td><td>0.376</td><td>Fake &gt; Real</td></tr><tr><td>6</td><td>Depth skewness</td><td>0.356</td><td>Real &gt; Fake</td></tr><tr><td>7</td><td>Fraction anomalous patches</td><td>0.307</td><td>Real &gt; Fake</td></tr></tbody></table>
+<h3>Less Is More: The Classifier</h3>
+<p><img src="/images/projects/vlmdraw-brightness.png" alt="Brightness-Depth Features: Real vs. AI-Generated"/></p>
+<p>We trained logistic regression classifiers with leave-one-out cross-validation:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Model</th><th>Accuracy</th><th>F1</th><th>Train Acc</th><th>Gap</th></tr></thead><tbody><tr><td>All 27 features</td><td>55.0%</td><td>0.542</td><td>81.7%</td><td>26.7pp</td></tr><tr><td><strong>3 features</strong></td><td><strong>68.3%</strong></td><td><strong>0.678</strong></td><td>71.7%</td><td><strong>3.4pp</strong></td></tr></tbody></table>
+<p>The 3-feature model uses only <strong>grad_mean</strong>, <strong>brightness_at_depth_edges</strong>, and <strong>n_valid_patches</strong> — and generalizes far better because:</p>
+<ul>
+<li>27 features overfit on 60 samples</li>
+<li>The top features capture complementary physics violations</li>
+<li>Minimal train/test gap (3.4pp) indicates genuine signal, not memorization</li>
+</ul>
+<h3>The Decision Rule</h3>
+<p>Classify as <strong>FAKE</strong> if:</p>
+<code class="text-brand-orange bg-brand-orange/10 px-1.5 py-0.5 rounded text-[0.8em] font-mono" node="[object Object]">1.43 × z(grad_mean) − 1.26 × z(brightness_at_depth_edges) + 0.04 &gt; 0
+</code>
+<p>Translation: an image is likely AI-generated if it has <strong>sharp depth gradients</strong> (doesn&#x27;t understand 3D geometry) combined with <strong>low brightness variation at depth edges</strong> (doesn&#x27;t understand light-surface interaction).</p>
+<h3>PCA Analysis</h3>
+<p><img src="/images/projects/vlmdraw-light.png" alt="Light Estimation Features: Real vs. AI-Generated"/></p>
+<p>27 features compress into 6 principal components capturing ~77% of variance:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>PC</th><th>Variance</th><th>Interpretation</th></tr></thead><tbody><tr><td>PC1</td><td>24.1%</td><td>Scene complexity (entropy, skewness, kurtosis)</td></tr><tr><td>PC2</td><td>15.3%</td><td>Lighting quality (angular deviation, anomalous patches)</td></tr><tr><td>PC3</td><td>13.8%</td><td>Brightness-depth coupling (pearson_r, spearman_r)</td></tr><tr><td>PC4</td><td>10.6%</td><td>Depth distribution shape (std, iqr, grad_mean)</td></tr><tr><td>PC5</td><td>7.5%</td><td>Information content (mutual_information)</td></tr></tbody></table>
+<p><strong>Critical insight</strong>: The real/fake signal is NOT the dominant axis of variation. Scene-level variation (complexity, depth range) dominates, which is why targeted feature selection outperforms using all features.</p>
+<h2>Limitations &amp; Future Work</h2>
+<ul>
+<li><strong>Sample size</strong>: 30 images per class is a proof-of-concept — scaling to thousands would strengthen results</li>
+<li><strong>Generator diversity</strong>: Tested on AIGenBench; extending to DALL-E 3, Midjourney v6, Flux would test generalizability</li>
+<li><strong>Depth estimator dependency</strong>: Results depend on the quality of the monocular depth model</li>
+<li><strong>Complementary approaches</strong>: Physics features could be combined with frequency-domain or learned detectors for higher accuracy</li>
+</ul>
+<h2>Conclusion</h2>
+<p>This project demonstrates that <strong>physics-based reasoning can detect AI-generated images</strong> without any training on specific generators. The key insight — AI images are paradoxically too consistent while having unnaturally sharp depth transitions — reveals a fundamental limitation of current image generators: they learn to approximate visual appearance without genuinely understanding the physical world that produces those appearances.</p></article></div></main></div></div><div class="fixed bottom-4 right-4 z-[55] flex flex-col items-end gap-2"><button aria-label="Open chat" class="w-[44px] h-[44px] rounded-full bg-brand-orange text-white shadow-lg flex items-center justify-center hover:bg-brand-orange/90 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle w-[18px] h-[18px]"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg></button></div><script src="/_next/static/chunks/webpack-cccb9f7275ec0b04.js" async=""></script><script>(self.__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])</script><script>self.__next_f.push([1,"1:HL[\"/_next/static/css/a6b4ff8e26634940.css\",\"style\"]\n"])</script><script>self.__next_f.push([1,"2:I[12846,[],\"\"]\n4:I[2314,[\"2370\",\"static/chunks/2370-4b75fdf839d102e4.js\",\"5811\",\"static/chunks/5811-d637ab8e4908ce24.js\",\"962\",\"static/chunks/962-c295223d31058e53.js\",\"9930\",\"static/chunks/9930-d174b851c072d57c.js\",\"8329\",\"static/chunks/8329-6e687e23dac240da.js\",\"5101\",\"static/chunks/app/projects/%5Bslug%5D/page-64488cf9b158e54c.js\"],\"ProjectDetailClient\"]\n5:I[4707,[],\"\"]\n7:I[36423,[],\"\"]\n8:I[12025,[\"3185\",\"static/chunks/app/layout-251aa3eefa7a2c5b.js\"],\"ThemeProvider\"]\n9:I[50910,[\"3185\",\"static/chunks/app/layout-251aa3eefa7a2c5b.js\"],\"LanguageProvider\"]\na:I[6372,[\"3185\",\"static/chunks/app/layout-251aa3eefa7a2c5b.js\"],\"ContactChat\"]\nc:I[61060,[],\"\"]\n6:[\"slug\",\"physics-ai-detection\",\"d\"]\nd:[]\n"])</script><script>self.__next_f.push([1,"0:[\"$\",\"$L2\",null,{\"buildId\":\"GgHsgm3Rw7tWVkozgaEzd\",\"assetPrefix\":\"\",\"urlParts\":[\"\",\"projects\",\"physics-ai-detection\",\"\"],\"initialTree\":[\"\",{\"children\":[\"projects\",{\"children\":[[\"slug\",\"physics-ai-detection\",\"d\"],{\"children\":[\"__PAGE__?{\\\"slug\\\":\\\"physics-ai-detection\\\"}\",{}]}]}]},\"$undefined\",\"$undefined\",true],\"initialSeedData\":[\"\",{\"children\":[\"projects\",{\"children\":[[\"slug\",\"physics-ai-detection\",\"d\"],{\"children\":[\"__PAGE__\",{},[[\"$L3\",[\"$\",\"$L4\",null,{\"slug\":\"physics-ai-detection\"}],null],null],null]},[null,[\"$\",\"$L5\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\",\"projects\",\"children\",\"$6\",\"children\"],\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L7\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":\"$undefined\",\"notFoundStyles\":\"$undefined\"}]],null]},[null,[\"$\",\"$L5\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\",\"projects\",\"children\"],\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L7\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":\"$undefined\",\"notFoundStyles\":\"$undefined\"}]],null]},[[[[\"$\",\"link\",\"0\",{\"rel\":\"stylesheet\",\"href\":\"/_next/static/css/a6b4ff8e26634940.css\",\"precedence\":\"next\",\"crossOrigin\":\"$undefined\"}]],[\"$\",\"html\",null,{\"lang\":\"en\",\"suppressHydrationWarning\":true,\"children\":[[\"$\",\"head\",null,{\"children\":[[\"$\",\"link\",null,{\"rel\":\"icon\",\"type\":\"image/svg+xml\",\"href\":\"/favicon.svg\"}],[\"$\",\"link\",null,{\"href\":\"https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400\u0026family=Poppins:wght@400;500;600;700\u0026family=JetBrains+Mono:wght@400;500;600\u0026family=Inter:wght@400;500;600;700\u0026display=swap\",\"rel\":\"stylesheet\"}]]}],[\"$\",\"body\",null,{\"children\":[\"$\",\"$L8\",null,{\"children\":[\"$\",\"$L9\",null,{\"children\":[[\"$\",\"div\",null,{\"className\":\"w-full h-screen overflow-x-hidden bg-white dark:bg-gray-900 text-gray-900 dark:text-white\",\"children\":[\"$\",\"$L5\",null,{\"parallelRouterKey\":\"children\",\"segmentPath\":[\"children\"],\"error\":\"$undefined\",\"errorStyles\":\"$undefined\",\"errorScripts\":\"$undefined\",\"template\":[\"$\",\"$L7\",null,{}],\"templateStyles\":\"$undefined\",\"templateScripts\":\"$undefined\",\"notFound\":[[\"$\",\"title\",null,{\"children\":\"404: This page could not be found.\"}],[\"$\",\"div\",null,{\"style\":{\"fontFamily\":\"system-ui,\\\"Segoe UI\\\",Roboto,Helvetica,Arial,sans-serif,\\\"Apple Color Emoji\\\",\\\"Segoe UI Emoji\\\"\",\"height\":\"100vh\",\"textAlign\":\"center\",\"display\":\"flex\",\"flexDirection\":\"column\",\"alignItems\":\"center\",\"justifyContent\":\"center\"},\"children\":[\"$\",\"div\",null,{\"children\":[[\"$\",\"style\",null,{\"dangerouslySetInnerHTML\":{\"__html\":\"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}\"}}],[\"$\",\"h1\",null,{\"className\":\"next-error-h1\",\"style\":{\"display\":\"inline-block\",\"margin\":\"0 20px 0 0\",\"padding\":\"0 23px 0 0\",\"fontSize\":24,\"fontWeight\":500,\"verticalAlign\":\"top\",\"lineHeight\":\"49px\"},\"children\":\"404\"}],[\"$\",\"div\",null,{\"style\":{\"display\":\"inline-block\"},\"children\":[\"$\",\"h2\",null,{\"style\":{\"fontSize\":14,\"fontWeight\":400,\"lineHeight\":\"49px\",\"margin\":0},\"children\":\"This page could not be found.\"}]}]]}]}]],\"notFoundStyles\":[]}]}],[\"$\",\"$La\",null,{}]]}]}]}]]}]],null],null],\"couldBeIntercepted\":false,\"initialHead\":[null,\"$Lb\"],\"globalErrorComponent\":\"$c\",\"missingSlots\":\"$Wd\"}]\n"])</script><script>self.__next_f.push([1,"b:[[\"$\",\"meta\",\"0\",{\"name\":\"viewport\",\"content\":\"width=device-width, initial-scale=1\"}],[\"$\",\"meta\",\"1\",{\"charSet\":\"utf-8\"}],[\"$\",\"title\",\"2\",{\"children\":\"Physics-Based AI Image Detection — Zizhao.md\"}],[\"$\",\"meta\",\"3\",{\"name\":\"description\",\"content\":\"Detecting AI-generated images through physics-based reasoning — analyzing depth maps, brightness-depth consistency, and light estimation to expose how AI fails to model real-world physics. A 3-feature classifier achieves 68.3% accuracy with just depth gradients and brightness edge analysis.\"}],[\"$\",\"meta\",\"4\",{\"name\":\"author\",\"content\":\"Zizhao Hu\"}],[\"$\",\"meta\",\"5\",{\"name\":\"keywords\",\"content\":\"Zizhao Hu,AI researcher,USC PhD,model unlearning,safety alignment,post-training,LLM,VLM,KV cache,synthetic data,GLAMOR Lab,Jesse Thomason\"}],[\"$\",\"meta\",\"6\",{\"name\":\"robots\",\"content\":\"index, follow\"}],[\"$\",\"meta\",\"7\",{\"property\":\"og:title\",\"content\":\"Zizhao.md\"}],[\"$\",\"meta\",\"8\",{\"property\":\"og:description\",\"content\":\"CS PhD at USC GLAMOR Lab. Model unlearning, safety alignment, post-training for LLMs and VLMs.\"}],[\"$\",\"meta\",\"9\",{\"property\":\"og:site_name\",\"content\":\"Zizhao.md\"}],[\"$\",\"meta\",\"10\",{\"property\":\"og:locale\",\"content\":\"en_US\"}],[\"$\",\"meta\",\"11\",{\"property\":\"og:type\",\"content\":\"website\"}],[\"$\",\"meta\",\"12\",{\"name\":\"twitter:card\",\"content\":\"summary_large_image\"}],[\"$\",\"meta\",\"13\",{\"name\":\"twitter:title\",\"content\":\"Zizhao.md\"}],[\"$\",\"meta\",\"14\",{\"name\":\"twitter:description\",\"content\":\"CS PhD at USC GLAMOR Lab. Model unlearning, safety alignment, post-training for LLMs and VLMs.\"}]]\n3:null\n"])</script></body></html>
