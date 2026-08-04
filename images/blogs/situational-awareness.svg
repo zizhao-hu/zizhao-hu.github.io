@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Situational awareness: perceive, comprehend, project">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16161a"/>
+      <stop offset="1" stop-color="#0e0e10"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#d97757"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- top label -->
+  <text x="80" y="86" font-family="ui-monospace, Menlo, monospace" font-size="20" letter-spacing="4" fill="#d97757">AI&#160;SAFETY</text>
+
+  <!-- speech bubble: the AI recognizes its situation -->
+  <g transform="translate(80,120)">
+    <rect x="0" y="0" width="470" height="72" rx="16" fill="#26201c" stroke="#d97757" stroke-opacity="0.5"/>
+    <path d="M46 72 L70 72 L54 100 Z" fill="#26201c" stroke="#d97757" stroke-opacity="0.5"/>
+    <text x="26" y="46" font-family="Georgia, serif" font-size="26" font-style="italic" fill="#f4c9b4">&#8220;This looks like an evaluation.&#8221;</text>
+  </g>
+
+  <!-- three levels -->
+  <g font-family="ui-monospace, Menlo, monospace">
+    <!-- level 1 -->
+    <g transform="translate(80,300)">
+      <rect width="300" height="150" rx="18" fill="#1d1d1b" stroke="#2f2f2b"/>
+      <circle cx="42" cy="46" r="16" fill="none" stroke="#6a9bcc" stroke-width="3"/>
+      <text x="74" y="52" font-size="22" fill="#6a9bcc" letter-spacing="1">01</text>
+      <text x="26" y="100" font-size="27" fill="#faf9f5">PERCEIVE</text>
+      <text x="26" y="128" font-family="Georgia, serif" font-size="19" fill="#b0aea5">read the inputs</text>
+    </g>
+    <!-- level 2 -->
+    <g transform="translate(450,300)">
+      <rect width="300" height="150" rx="18" fill="#1d1d1b" stroke="#2f2f2b"/>
+      <circle cx="42" cy="46" r="16" fill="none" stroke="#788c5d" stroke-width="3"/>
+      <text x="74" y="52" font-size="22" fill="#788c5d" letter-spacing="1">02</text>
+      <text x="26" y="100" font-size="27" fill="#faf9f5">COMPREHEND</text>
+      <text x="26" y="128" font-family="Georgia, serif" font-size="19" fill="#b0aea5">grasp the situation</text>
+    </g>
+    <!-- level 3 -->
+    <g transform="translate(820,300)">
+      <rect width="300" height="150" rx="18" fill="#1d1d1b" stroke="#d97757" stroke-opacity="0.55"/>
+      <circle cx="42" cy="46" r="16" fill="none" stroke="#d97757" stroke-width="3"/>
+      <text x="74" y="52" font-size="22" fill="#d97757" letter-spacing="1">03</text>
+      <text x="26" y="100" font-size="27" fill="#faf9f5">PROJECT</text>
+      <text x="26" y="128" font-family="Georgia, serif" font-size="19" fill="#b0aea5">anticipate what&#8217;s next</text>
+    </g>
+    <!-- arrows -->
+    <line x1="384" y1="375" x2="446" y2="375" stroke="#d97757" stroke-width="3" marker-end="url(#arrow)"/>
+    <line x1="754" y1="375" x2="816" y2="375" stroke="#d97757" stroke-width="3" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- bottom caption -->
+  <text x="80" y="540" font-family="ui-monospace, Menlo, monospace" font-size="34" fill="#faf9f5" letter-spacing="1">Situational Awareness</text>
+  <text x="80" y="576" font-family="Georgia, serif" font-size="21" fill="#8a8a84">when a model builds a model of its own situation</text>
+</svg>

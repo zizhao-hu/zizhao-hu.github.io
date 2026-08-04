@@ -1,5 +1,5 @@
 User-Agent: *
 Allow: /
-Disallow: /internal
+Disallow: /brain
 
 Sitemap: https://zizhaohu.com/sitemap.xml

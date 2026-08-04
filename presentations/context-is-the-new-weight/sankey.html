@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Memory-flow analogy and where each store lives in the transformer</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:1280px;margin:1em auto;padding:0 1em;color:#222}
+h4{margin:.8em 0 .15em 0;color:#555;font-size:12.5px;font-weight:600}
+svg{display:block;max-width:100%;height:auto}
+@page { size: 770px 320px; margin: 0; }
+@media print {
+  body { margin: 0; padding: 0; max-width: none; }
+  body > div { margin: 0 !important; border: 0 !important; padding: 0 !important; }
+}
+</style></head><body>
+
+<div style="margin:1em 0;background:#fff;border:1px solid #ddd;padding:.8em">
+<svg viewBox="100 0 770 320" width="100%" style="font-family:-apple-system,sans-serif">
+<defs>
+  <linearGradient id="gradDistill" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#46c" stop-opacity="0.85"/>
+    <stop offset="100%" stop-color="#c33" stop-opacity="0.85"/>
+  </linearGradient>
+  <linearGradient id="gradTuning" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#46c" stop-opacity="0.85"/>
+    <stop offset="100%" stop-color="#a64" stop-opacity="0.85"/>
+  </linearGradient>
+  <linearGradient id="gradSTout" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#a64" stop-opacity="0.85"/>
+    <stop offset="100%" stop-color="#c33" stop-opacity="0.85"/>
+  </linearGradient>
+  <marker id="arrowR" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M 0 0 L 5 2.5 L 0 5 Z" fill="#d76"/>
+  </marker>
+  <marker id="arrowPurple" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M 0 0 L 5 2.5 L 0 5 Z" fill="#735"/>
+  </marker>
+  <marker id="arrowOrange" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M 0 0 L 5 2.5 L 0 5 Z" fill="#3a9"/>
+  </marker>
+  <marker id="arrowGold" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M 0 0 L 5 2.5 L 0 5 Z" fill="#26b"/>
+  </marker>
+  <marker id="arrowCaramel" markerWidth="5" markerHeight="5" refX="4.5" refY="2.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M 0 0 L 5 2.5 L 0 5 Z" fill="#d83"/>
+  </marker>
+</defs>
+<!-- ============================================================ -->
+<!-- SECTION BACKGROUNDS (subtle tint to separate left/right)     -->
+<!-- ============================================================ -->
+<rect x="100" y="4" width="260" height="306" fill="#e6ebf3" rx="8"/>
+<rect x="360" y="4" width="508" height="306" fill="#f3ead9" rx="8"/>
+<!-- ============================================================ -->
+<!-- TOP TITLE ROW (single line at y=-12)                         -->
+<!--   "LLM Agent Memory System"  |  "Transformer Architecture"   -->
+<!--   layer 1 | layer 2 | ⋯ | layer N                             -->
+<!-- ============================================================ -->
+<text x="110" y="20" text-anchor="start" font-size="13" font-weight="bold" fill="#000">Memory Consolidation Abstraction</text>
+<text x="370" y="20" text-anchor="start" font-size="13" font-weight="bold" fill="#000">GPT-like LLM</text>
+<text x="560" y="20" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">input space</text>
+<text x="680" y="20" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">layer 1</text>
+<text x="745" y="22" text-anchor="middle" font-size="14" fill="#000">⋯</text>
+<text x="810" y="20" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">layer N</text>
+
+
+
+<!-- ============================================================ -->
+<!-- LEFT PANEL: 3 memory boxes + Sankey                          -->
+<!--                                                               -->
+<!-- Logic:                                                        -->
+<!--  · prompt + LoRA merge into a single RED left band            -->
+<!--    (prompt-cont is recolored red below short-term).           -->
+<!--  · prefix + Full FT merge into a single DARK-RED right band   -->
+<!--    (prefix-cont is recolored dark red below short-term).      -->
+<!--  · Above short-term: prompt = orange, prefix = caramel.       -->
+<!-- ============================================================ -->
+
+<!-- Memory boxes -->
+<rect x="110" y="30" width="240" height="40" fill="#d8e9ff" stroke="#46c" stroke-width="2.5" rx="6"/>
+<text x="230" y="48" text-anchor="middle" font-size="13" font-weight="bold" fill="#000">Working memory</text>
+<text x="230" y="62" text-anchor="middle" font-size="10" font-style="italic" fill="#333">volatile, per-session</text>
+
+<!-- Short-term memory: 3 units wide (x=151..364) -->
+<rect x="190" y="140" width="160" height="40" fill="#fff4d6" stroke="#a64" stroke-width="2.5" rx="6"/>
+<text x="270" y="158" text-anchor="middle" font-size="13" font-weight="bold" fill="#000">Embedding memory</text>
+<text x="270" y="172" text-anchor="middle" font-size="10" font-style="italic" fill="#333">compressed, per task</text>
+
+<rect x="110" y="260" width="240" height="40" fill="#fde6e6" stroke="#c33" stroke-width="2.5" rx="6"/>
+<text x="230" y="278" text-anchor="middle" font-size="13" font-weight="bold" fill="#000">Static memory</text>
+<text x="230" y="292" text-anchor="middle" font-size="10" font-style="italic" fill="#333">long term, habit, global</text>
+
+<!-- =================================================================== -->
+<!-- Sankey bands                                                         -->
+<!--   ① Distillation (col 1, x=80..151): bypasses short-term             -->
+<!--   ② Prefix Tuning  (col 3, x=222..293): → into short-term            -->
+<!--   ③ Prompt Tuning  (col 4, x=293..364): → into short-term            -->
+<!--   ④ Full FT  (long-term, x=80..222): receives ① + short-term col A   -->
+<!--   ⑤ LoRA    (long-term, x=222..293): from short-term col B           -->
+<!--   ⑥ Others  (long-term, x=293..364): from short-term col C           -->
+<!-- =================================================================== -->
+
+<!-- ① Distillation — single straight band from working to long-term memory -->
+<path d="M 121 70 L 121 260 L 181 260 L 181 70 Z" fill="#735" fill-opacity="0.55" stroke="none"/>
+
+<!-- ④ Prefix Tuning — col 4 into short-term -->
+<path d="M 281 70 L 281 140 L 341 140 L 341 70 Z" fill="#26b" fill-opacity="0.55" stroke="none"/>
+
+<!-- ③ Prompt Tuning — col 3 into short-term -->
+<path d="M 201 70 L 201 140 L 261 140 L 261 70 Z" fill="#3a9" fill-opacity="0.55" stroke="none"/>
+
+<!-- ST outflows land at the narrow positions 2 / 4 / 6 (each ~24 px wide) -->
+<!-- ST col A (now Prompt content after swap) → "prompt distillation" outflow -->
+<path d="M 201 180 L 201 260 L 261 260 L 261 180 Z" fill="#d83" fill-opacity="0.55" stroke="none"/>
+<!-- ST col B (now Prefix content after swap) → "prefix distillation" outflow -->
+<path d="M 281 180 L 281 260 L 341 260 L 341 180 Z" fill="#c33" fill-opacity="0.55" stroke="none"/>
+
+<!-- ============================================================ -->
+<!-- Filled V-stripe chevrons (restored arrow-flow logic):        -->
+<!--   · stripe T=28, gap≈32 (row pitch 60)                       -->
+<!--   · fill-opacity 0.10 → only a minor shade darker            -->
+<!--   · adjacent bands share y_top so lateral tips meet at edges  -->
+<!-- ============================================================ -->
+<g>
+  <polygon points="121,73.182 151,82.727 181,73.182 181,91 151,100.545 121,91" fill="#735" fill-opacity="0.2" stroke="none"/>
+  <polygon points="121,111.364 151,120.909 181,111.364 181,129.182 151,138.727 121,129.182" fill="#735" fill-opacity="0.2" stroke="none"/>
+  <polygon points="121,183.636 151,194.545 181,183.636 181,204 151,214.909 121,204" fill="#735" fill-opacity="0.2" stroke="none"/>
+  <polygon points="121,227.273 151,238.182 181,227.273 181,247.636 151,258.545 121,247.636" fill="#735" fill-opacity="0.2" stroke="none"/>
+  <polygon points="201,73.182 231,82.727 261,73.182 261,91 231,100.545 201,91" fill="#3a9" fill-opacity="0.2" stroke="none"/>
+  <polygon points="201,111.364 231,120.909 261,111.364 261,129.182 231,138.727 201,129.182" fill="#3a9" fill-opacity="0.2" stroke="none"/>
+  <polygon points="281,73.182 311,82.727 341,73.182 341,91 311,100.545 281,91" fill="#26b" fill-opacity="0.2" stroke="none"/>
+  <polygon points="281,111.364 311,120.909 341,111.364 341,129.182 311,138.727 281,129.182" fill="#26b" fill-opacity="0.2" stroke="none"/>
+  <polygon points="201,183.636 231,194.545 261,183.636 261,204 231,214.909 201,204" fill="#d83" fill-opacity="0.2" stroke="none"/>
+  <polygon points="201,227.273 231,238.182 261,227.273 261,247.636 231,258.545 201,247.636" fill="#d83" fill-opacity="0.2" stroke="none"/>
+  <polygon points="281,183.636 311,194.545 341,183.636 341,204 311,214.909 281,204" fill="#c33" fill-opacity="0.2" stroke="none"/>
+  <polygon points="281,227.273 311,238.182 341,227.273 341,247.636 311,258.545 281,247.636" fill="#c33" fill-opacity="0.2" stroke="none"/>
+</g>
+
+<!-- Short-term → long-term outflow labels -->
+<text x="231" y="216.364" text-anchor="middle" font-size="14" font-weight="bold" fill="#000">④</text>
+<text x="231" y="229.455" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">trainable</text>
+<text x="231" y="238.182" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">prompt</text>
+<text x="231" y="246.909" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">distillation</text>
+<text x="311" y="216.364" text-anchor="middle" font-size="14" font-weight="bold" fill="#000">⑤</text>
+<text x="311" y="229.455" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">trainable</text>
+<text x="311" y="238.182" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">prefix</text>
+<text x="311" y="246.909" text-anchor="middle" font-size="10" font-weight="bold" fill="#000">distillation</text>
+
+
+<!-- =================================================================== -->
+<!-- Band labels                                                          -->
+<!-- =================================================================== -->
+
+<!-- ① full/lora context distillation (single label, vertically centered in distillation band) -->
+<text x="151" y="153.364" text-anchor="middle" font-size="14" font-weight="bold" fill="#000">①</text>
+<text x="151" y="166.455" text-anchor="middle" font-size="9" font-weight="bold" fill="#000">full/lora</text>
+<text x="151" y="175.182" text-anchor="middle" font-size="9" font-weight="bold" fill="#000">context</text>
+<text x="151" y="183.909" text-anchor="middle" font-size="9" font-weight="bold" fill="#000">distillation</text>
+
+<!-- ② Prompt Tuning -->
+<text x="231" y="101.818" text-anchor="middle" font-size="14" font-weight="bold" fill="#000">②</text>
+<text x="231" y="126" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Prompt</text>
+<text x="231" y="134.909" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Tuning</text>
+
+<!-- ③ Prefix Tuning -->
+<text x="311" y="101.818" text-anchor="middle" font-size="14" font-weight="bold" fill="#000">③</text>
+<text x="311" y="126" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Prefix</text>
+<text x="311" y="134.909" text-anchor="middle" font-size="11" font-weight="bold" fill="#000">Tuning</text>
+
+<!-- ④ Full FT destination at long-term entry (label centered on x=80..222 visible portion) -->
+<!-- Note: distillation occupies x=80..151, Full FT outflow from short-term occupies x=151..222 -->
+
+<!-- ⑤ LoRA destination -->
+
+
+
+
+
+
+
+
+
+
+
+<!-- ============================================================ -->
+<!-- RIGHT PANEL: transformer architecture                       -->
+<!-- 3 rows EXACTLY aligned with the 3 left-panel memory boxes.  -->
+<!--   row 1 (green)  y=30..90   ← Sensory / working             -->
+<!--   row 2 (yellow) y=200..260 ← Short-term                    -->
+<!--   row 3 (red)    y=370..430 ← Long-term                     -->
+<!-- Between rows: transformer compute flow at layer ℓ (× N).    -->
+<!-- ============================================================ -->
+
+<!-- ===== Row 1: KV cache (green, y=30..90) ===== -->
+<!-- Layout: [row label] [C] context | layer 1 | layer 2 | ⋯ | layer N -->
+<rect x="370" y="30" width="488" height="40" fill="#d8e9ff" stroke="#46c" stroke-width="2" rx="6"/>
+<text x="380" y="46" text-anchor="start" font-size="14" font-weight="bold" fill="#000">Inference</text>
+<text x="380" y="60" text-anchor="start" font-size="14" font-weight="bold" fill="#000">cache</text>
+<!-- Source box on the LEFT, just after the row label -->
+<rect x="490" y="38" width="140" height="24" fill="#fff" stroke="#46c" stroke-width="1.5" rx="4"/>
+<text x="560" y="53.333" text-anchor="middle" font-size="13" font-weight="bold" fill="#000">context [C]</text>
+<!-- Per-layer cells, in order: layer 1 → layer 2 → ⋯ → layer N -->
+<g font-family="monospace" font-size="10" font-weight="bold" fill="#000">
+  <rect x="640" y="38" width="80" height="24" fill="#fff" stroke="#46c" stroke-width="1.5" rx="4"/>
+  <text x="680" y="52.667" text-anchor="middle">K¹, V¹</text>
+  <text x="745" y="51.333" text-anchor="middle" font-size="14">⋯</text>
+  <rect x="770" y="38" width="80" height="24" fill="#fff" stroke="#46c" stroke-width="1.5" rx="4"/>
+  <text x="810" y="52.667" text-anchor="middle">Kᴺ, Vᴺ</text>
+</g>
+
+
+<!-- ===== Row 2: Trainable KV cache (yellow, y=200..260) ===== -->
+<rect x="482" y="140" width="376" height="40" fill="#fff4d6" stroke="#a64" stroke-width="2" rx="6"/>
+<!-- Source box on the LEFT: trainable prompt — aligned under [C] context (same x range, same width) -->
+<rect x="490" y="148" width="140" height="24" fill="#fff" stroke="#a64" stroke-width="1.5" rx="4"/>
+<text x="560" y="163.333" text-anchor="middle" font-size="13" font-weight="bold" fill="#000">🔥 soft prompt [C<tspan baseline-shift="sub" font-size="75%">θ</tspan>]</text>
+<g font-family="monospace" font-size="10" font-weight="bold" fill="#000">
+  <rect x="640" y="148" width="80" height="24" fill="#fff" stroke="#a64" stroke-width="1.5" rx="4"/>
+  <text x="680" y="164" text-anchor="middle">🔥 K¹<tspan baseline-shift="sub" font-size="70%">θ</tspan>, V¹<tspan baseline-shift="sub" font-size="70%">θ</tspan></text>
+  <text x="745" y="161.333" text-anchor="middle" font-size="14">⋯</text>
+  <rect x="770" y="148" width="80" height="24" fill="#fff" stroke="#a64" stroke-width="1.5" rx="4"/>
+  <text x="810" y="164" text-anchor="middle">🔥 Kᴺ<tspan baseline-shift="sub" font-size="70%">θ</tspan>, Vᴺ<tspan baseline-shift="sub" font-size="70%">θ</tspan></text>
+</g>
+
+
+<!-- ===== Row 3: Model weights (red, y=370..430) ===== -->
+<rect x="370" y="260" width="488" height="40" fill="#fde6e6" stroke="#c33" stroke-width="2" rx="6"/>
+<text x="380" y="276" text-anchor="start" font-size="14" font-weight="bold" fill="#000">static</text>
+<text x="380" y="290" text-anchor="start" font-size="14" font-weight="bold" fill="#000">parameters</text>
+<!-- Token embedding source box: aligned under [C] context and soft prompt -->
+<rect x="490" y="268" width="140" height="24" fill="#fff" stroke="#c33" stroke-width="1.5" rx="4"/>
+<text x="560" y="283.333" text-anchor="middle" font-size="13" font-weight="bold" fill="#000">🔥 token embedding</text>
+<g font-family="monospace" font-size="10" font-weight="bold" fill="#000">
+  <rect x="640" y="268" width="80" height="24" fill="#fff" stroke="#c33" stroke-width="1.5" rx="4"/>
+  <text x="680" y="284" text-anchor="middle">🔥 W<tspan baseline-shift="sub" font-size="70%">q,k,v,o,ffn</tspan><tspan baseline-shift="super" font-size="70%">1</tspan></text>
+  <text x="745" y="281.333" text-anchor="middle" font-size="14">⋯</text>
+  <rect x="770" y="268" width="80" height="24" fill="#fff" stroke="#c33" stroke-width="1.5" rx="4"/>
+  <text x="810" y="284" text-anchor="middle">🔥 W<tspan baseline-shift="sub" font-size="70%">q,k,v,o,ffn</tspan><tspan baseline-shift="super" font-size="70%">N</tspan></text>
+</g>
+
+
+
+
+
+<!-- Top-down distillation connection: [C] context → Model Weights -->
+<path d="M 553 62 L 553 76.364 L 395 76.364 L 395 260" stroke="#735" stroke-width="2.5" stroke-linejoin="miter" fill="none" marker-end="url(#arrowPurple)" opacity="0.9"/>
+
+
+<!-- ③ Prompt Tuning : [C] context → trainable prompt (within right panel) -->
+<path d="M 560 62 L 560 148" stroke="#3a9" stroke-width="2.5" fill="none" marker-end="url(#arrowOrange)" opacity="0.9"/>
+<!-- ④ Prefix Tuning : [C] context → per-layer trainable KV cell -->
+<path d="M 567 62 L 567 76.364 L 680 76.364 L 680 148" stroke="#26b" stroke-width="2.5" stroke-linejoin="miter" fill="none" marker-end="url(#arrowGold)" opacity="0.9"/>
+<path d="M 567 62 L 567 76.364 L 810 76.364 L 810 148" stroke="#26b" stroke-width="2.5" stroke-linejoin="miter" fill="none" marker-end="url(#arrowGold)" opacity="0.9"/>
+<!-- ⑤ prompt distillation : trainable prompt → static parameters -->
+<path d="M 560 172 L 560 260" stroke="#d83" stroke-width="2.5" fill="none" marker-end="url(#arrowCaramel)" opacity="0.9"/>
+<!-- ⑥ prefix distillation : per-layer trainable KV cell → per-layer Row 3 cell -->
+<path d="M 680 172 L 680 260" stroke="#c33" stroke-width="2.5" fill="none" marker-end="url(#arrowR)" opacity="0.9"/>
+<path d="M 810 172 L 810 260" stroke="#c33" stroke-width="2.5" fill="none" marker-end="url(#arrowR)" opacity="0.9"/>
+
+
+
+
+<!-- Tight-wrapped objective boxes; number top-right, colon-aligned rows -->
+<g font-family="-apple-system, sans-serif">
+  <rect x="370" y="199" width="115" height="42" fill="#fff" stroke="#735" stroke-width="2.5" rx="3"/>
+  <text x="480" y="212" text-anchor="end" font-size="11" font-weight="bold" fill="#000">①</text>
+  <text x="376" y="224" font-size="8" font-family="monospace" fill="#000">from: p(·|x, C)</text>
+  <text x="376" y="235" font-size="8" font-family="monospace" fill="#000">&#160;&#160;to: p(·|x; θ<tspan baseline-shift="sub" font-size="70%">full/lora</tspan>)</text>
+  <rect x="502" y="84" width="116" height="42" fill="#fff" stroke="#3a9" stroke-width="2.5" rx="3"/>
+  <text x="613" y="97" text-anchor="end" font-size="11" font-weight="bold" fill="#000">②</text>
+  <text x="508" y="109" font-size="8" font-family="monospace" fill="#000">from: p(·|x, C)</text>
+  <text x="508" y="120" font-size="8" font-family="monospace" fill="#000">&#160;&#160;to: p(·|x; C<tspan baseline-shift="sub" font-size="70%">θ</tspan>)</text>
+  <rect x="680" y="84" width="130" height="42" fill="#fff" stroke="#26b" stroke-width="2.5" rx="3"/>
+  <text x="805" y="97" text-anchor="end" font-size="11" font-weight="bold" fill="#000">③</text>
+  <text x="686" y="109" font-size="8" font-family="monospace" fill="#000">from: p(·|x, C)</text>
+  <text x="686" y="120" font-size="8" font-family="monospace" fill="#000">&#160;&#160;to: p(·|x; K<tspan baseline-shift="sub" font-size="70%">θ</tspan>, V<tspan baseline-shift="sub" font-size="70%">θ</tspan>)</text>
+  <rect x="502" y="199" width="116" height="42" fill="#fff" stroke="#d83" stroke-width="2.5" rx="3"/>
+  <text x="613" y="212" text-anchor="end" font-size="11" font-weight="bold" fill="#000">④</text>
+  <text x="508" y="224" font-size="8" font-family="monospace" fill="#000">from: p(·|x; C<tspan baseline-shift="sub" font-size="70%">θ</tspan>)</text>
+  <text x="508" y="235" font-size="8" font-family="monospace" fill="#000">&#160;&#160;to: p(·|x; θ<tspan baseline-shift="sub" font-size="70%">full/lora</tspan>)</text>
+  <rect x="680" y="199" width="130" height="42" fill="#fff" stroke="#c33" stroke-width="2.5" rx="3"/>
+  <text x="805" y="212" text-anchor="end" font-size="11" font-weight="bold" fill="#000">⑤</text>
+  <text x="686" y="224" font-size="8" font-family="monospace" fill="#000">from: p(·|x; K<tspan baseline-shift="sub" font-size="70%">θ</tspan>, V<tspan baseline-shift="sub" font-size="70%">θ</tspan>)</text>
+  <text x="686" y="235" font-size="8" font-family="monospace" fill="#000">&#160;&#160;to: p(·|x; θ<tspan baseline-shift="sub" font-size="70%">full/lora</tspan>)</text>
+</g>
+
+<!-- ============================================================ -->
+<!-- Alignment guides: horizontal dashed lines at exact same y    -->
+<!-- ============================================================ -->
+<line x1="350" y1="50"  x2="370" y2="50"  stroke="#46c" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.55"/>
+<line x1="350" y1="160" x2="482" y2="160" stroke="#a64" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.55"/>
+<line x1="350" y1="280" x2="370" y2="280" stroke="#c33" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.55"/>
+
+</svg>
+</div>
+
+</body></html>

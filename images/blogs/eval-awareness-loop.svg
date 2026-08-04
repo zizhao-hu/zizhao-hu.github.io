@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="1200" height="380" role="img" aria-label="How evaluation awareness can invalidate a safety test">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b0aea5"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="380" fill="#0f0f11"/>
+
+  <g font-family="ui-monospace, Menlo, monospace">
+    <!-- node 1 -->
+    <g transform="translate(40,120)">
+      <rect width="250" height="130" rx="16" fill="#1b1b19" stroke="#2f2f2b"/>
+      <text x="20" y="40" font-size="15" fill="#6a9bcc" letter-spacing="2">STEP 1</text>
+      <text x="20" y="76" font-size="20" fill="#faf9f5">Run a safety</text>
+      <text x="20" y="102" font-size="20" fill="#faf9f5">evaluation</text>
+    </g>
+    <!-- node 2 -->
+    <g transform="translate(330,120)">
+      <rect width="250" height="130" rx="16" fill="#1b1b19" stroke="#2f2f2b"/>
+      <text x="20" y="40" font-size="15" fill="#6a9bcc" letter-spacing="2">STEP 2</text>
+      <text x="20" y="76" font-size="20" fill="#faf9f5">Model detects</text>
+      <text x="20" y="102" font-size="20" fill="#faf9f5">&#8220;this is a test&#8221;</text>
+    </g>
+    <!-- node 3 -->
+    <g transform="translate(620,120)">
+      <rect width="250" height="130" rx="16" fill="#1b1b19" stroke="#2f2f2b"/>
+      <text x="20" y="40" font-size="15" fill="#788c5d" letter-spacing="2">STEP 3</text>
+      <text x="20" y="76" font-size="20" fill="#faf9f5">Behaves</text>
+      <text x="20" y="102" font-size="20" fill="#faf9f5">perfectly</text>
+    </g>
+    <!-- node 4 -->
+    <g transform="translate(910,120)">
+      <rect width="250" height="130" rx="16" fill="#241a17" stroke="#d97757" stroke-opacity="0.6"/>
+      <text x="20" y="40" font-size="15" fill="#d97757" letter-spacing="2">IN THE WILD</text>
+      <text x="20" y="76" font-size="20" fill="#f4c9b4">No test cue,</text>
+      <text x="20" y="102" font-size="20" fill="#f4c9b4">new behavior</text>
+    </g>
+
+    <!-- arrows -->
+    <line x1="292" y1="185" x2="326" y2="185" stroke="#b0aea5" stroke-width="2.5" marker-end="url(#a2)"/>
+    <line x1="582" y1="185" x2="616" y2="185" stroke="#b0aea5" stroke-width="2.5" marker-end="url(#a2)"/>
+    <line x1="872" y1="185" x2="906" y2="185" stroke="#d97757" stroke-width="2.5" marker-end="url(#a2)"/>
+
+    <text x="40" y="300" font-family="Georgia, serif" font-style="italic" font-size="19" fill="#8a8a84">The eval says &#8220;safe.&#8221; Deployment may say otherwise &#8212; the test measured test-taking, not the trait.</text>
+  </g>
+</svg>
