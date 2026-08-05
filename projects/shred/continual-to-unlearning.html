@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>From Continual Learning to Unlearning</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--cardinal:#990000;--gold:#FFCC00;--gold-dark:#B3A369;--bg:#ffffff;--surface:#f7f7f8;--surface2:#eeeef0;--surface3:#e4e4e7;--border:#d1d1d6;--text:#1a1a1a;--dim:#555;--accent:#990000;--cyan:#0066cc;--green:#1a7a3a;--red:#cc0000;--orange:#c75300;--yellow:#b8860b;--purple:#6b21a8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;width:100vw}
+
+/* Slide with USC Viterbi template background — content overlays the PNG */
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .5s,transform .5s,visibility 0s .5s;transform:translateX(60px);background:url('viterbi_bg.png') center/cover no-repeat #fff;z-index:1}
+.slide-inner{width:1440px;height:810px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 80px 80px 80px;transform-origin:center center}
+.slide.active{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0);transition-delay:0s}
+.slide.prev{transform:translateX(-60px)}
+
+/* Typography */
+.slide h1{font-size:3.6rem;font-weight:900;line-height:1.15;text-align:center;margin-bottom:16px;color:var(--cardinal)}
+.slide h2{font-size:2.4rem;font-weight:800;margin-bottom:24px;text-align:center;color:var(--cardinal)}
+.slide h3{font-size:1.5rem;font-weight:700;margin-bottom:12px;color:var(--cardinal)}
+.slide p,.slide li{font-size:1.2rem;line-height:1.7;color:var(--dim);max-width:900px}
+.slide ul{list-style:none;text-align:left;max-width:900px;width:100%}
+.slide li{padding:8px 0 8px 28px;position:relative}
+.slide li::before{content:'▸';position:absolute;left:0;color:var(--cardinal);font-weight:700}
+.slide .highlight{color:var(--text);font-weight:600}
+.slide .accent{color:var(--cardinal)}
+.slide .cyan{color:var(--cyan)}
+.slide .green{color:var(--green)}
+.slide .red{color:var(--red)}
+.slide .orange{color:var(--orange)}
+.slide .sub{font-size:.85rem;color:var(--dim);margin-top:8px;text-align:center}
+
+/* Heading styles — cardinal/gold instead of gradients */
+.grad1{color:var(--cardinal)}
+.grad2{color:var(--red)}
+.grad3{color:var(--green)}
+.grad4{color:var(--purple)}
+
+/* Cards / boxes */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;margin:10px;width:100%;max-width:420px}
+.card h3{margin-bottom:8px}
+.card p{font-size:.92rem}
+.row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;width:100%;max-width:1100px;margin-top:16px}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;max-width:1000px;margin-top:16px}
+
+/* Diagram elements */
+.flow{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:1rem;flex-wrap:wrap;justify-content:center}
+.flow-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-weight:600;font-size:.85rem;color:var(--text)}
+.flow-arrow{color:var(--cardinal);font-size:1.4rem;font-weight:700}
+
+/* Formula */
+.formula-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 28px;margin:14px auto;max-width:800px;text-align:center;font-family:'Inter',sans-serif;font-size:1rem;color:var(--text);line-height:2}
+.formula-box .label{font-family:'Inter';font-size:.75rem;color:var(--cardinal);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:700}
+
+/* Table */
+.res-table{border-collapse:collapse;font-size:.78rem;width:100%;max-width:960px;margin-top:12px}
+.res-table th{background:var(--cardinal);padding:8px 12px;font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-bottom:2px solid var(--gold);text-align:center}
+.res-table th:first-child{text-align:left;min-width:140px}
+.res-table td{padding:8px 12px;text-align:center;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;color:var(--text)}
+.res-table td:first-child{text-align:left;font-weight:600}
+.res-table .rref td:first-child{color:var(--green);border-left:3px solid var(--green)}
+.res-table .rstart td:first-child{color:var(--red);border-left:3px solid var(--red)}
+.res-table .rours td:first-child{color:var(--cardinal);border-left:3px solid var(--cardinal)}
+.res-table .best{color:var(--green);font-weight:700}
+.res-table .bad{color:var(--red);opacity:.8}
+.res-table .warn{color:var(--orange)}
+.res-table .good{color:var(--cyan)}
+.res-table .sep td{padding:2px;border-bottom:2px solid var(--border);background:transparent}
+.col-sep{border-left:2px solid var(--border)}
+.tag{display:inline-block;font-size:.55rem;padding:2px 5px;border-radius:4px;margin-left:4px;font-weight:700;vertical-align:middle}
+.tag-g{background:rgba(26,122,58,.12);color:var(--green)}
+.tag-r{background:rgba(204,0,0,.1);color:var(--red)}
+.tag-b{background:rgba(153,0,0,.1);color:var(--cardinal)}
+
+/* Token viz */
+.tok-demo{font-family:'JetBrains Mono',monospace;font-size:.76rem;line-height:2.2;word-wrap:break-word;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;max-height:200px;overflow-y:auto}
+.tok{display:inline;padding:2px 1px;border-radius:3px}
+.panel-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.panel-label.ft{color:var(--red)}
+.panel-label.base{color:var(--green)}
+
+/* Example nav buttons */
+.ex-nav{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:8px}
+.ex-nav button{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'Inter';font-size:.72rem;font-weight:600;transition:background .15s}
+.ex-nav button:hover{background:var(--cardinal);color:#fff;border-color:var(--cardinal)}
+.ex-nav .ex-info{font-size:.72rem;color:var(--dim);min-width:60px;text-align:center;font-family:'JetBrains Mono'}
+
+/* Charts */
+canvas.chart{width:100%;height:200px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+
+/* Section divider */
+.divider{width:100%;max-width:200px;height:2px;background:linear-gradient(90deg,transparent,var(--cardinal),transparent);margin:20px auto}
+
+/* Fragment reveal */
+[data-frag]{opacity:0;transform:translateY(18px);transition:opacity .45s ease, transform .45s ease;pointer-events:none}
+[data-frag].visible{opacity:1;transform:translateY(0);pointer-events:auto}
+
+/* Navigation — keep slide number visible, hide elements that overlap USC footer */
+#progress{display:none}
+#sectionLabel{display:none}
+#slideNum{position:fixed;bottom:90px;right:40px;font-size:.85rem;color:var(--dim);font-family:'JetBrains Mono';z-index:100;font-weight:500}
+.timing{display:none}
+
+/* Progress nav bar */
+#progNav{position:fixed;top:0;left:0;right:0;height:36px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:0;z-index:200;font-family:'Inter',sans-serif;transition:opacity .3s}
+#progNav.hidden{opacity:0;pointer-events:none}
+.pn-part{display:flex;align-items:center;gap:0;position:relative}
+.pn-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:4px 10px;border-radius:4px;cursor:default;white-space:nowrap;transition:background .3s,color .3s;color:var(--dim)}
+.pn-label.active{background:var(--cardinal);color:#fff}
+.pn-label.done{color:var(--green)}
+.pn-sub{font-size:.56rem;padding:2px 6px;color:var(--dim);opacity:.5;white-space:nowrap;transition:opacity .3s,color .3s}
+.pn-sub.active{opacity:1;color:var(--cardinal);font-weight:600}
+.pn-sub.done{opacity:.7;color:var(--green)}
+.pn-sep{width:20px;text-align:center;color:var(--border);font-size:.7rem}
+</style>
+</head>
+<body>
+
+<!-- Progress Navigation Bar -->
+<div id="progNav" class="hidden">
+<div class="pn-part" data-part="0">
+<span class="pn-label">Overview</span>
+<span class="pn-sub" data-slides="1">Talk Overview</span>
+</div>
+<div class="pn-sep">›</div>
+<div class="pn-part" data-part="1">
+<span class="pn-label">Part 1 · CL</span>
+<span class="pn-sub" data-slides="2">CL Overview</span>
+<span class="pn-sub" data-slides="3">Synthetic Replay</span>
+<span class="pn-sub" data-slides="4">Model Collapse</span>
+<span class="pn-sub" data-slides="5">Utility</span>
+</div>
+<div class="pn-sep">›</div>
+<div class="pn-part" data-part="2">
+<span class="pn-label">Part 2 · Unlearning</span>
+<span class="pn-sub" data-slides="6">CL→UL</span>
+<span class="pn-sub" data-slides="7,8,9">Hubble</span>
+<span class="pn-sub" data-slides="10,11">Method</span>
+<span class="pn-sub" data-slides="12,13,14,15">Results</span>
+</div>
+<div class="pn-sep">›</div>
+<div class="pn-part" data-part="3">
+<span class="pn-label">Q&A</span>
+<span class="pn-sub" data-slides="16">Conclusion</span>
+<span class="pn-sub" data-slides="17">Discussion</span>
+</div>
+</div>
+
+
+<!-- ============== SLIDES ============== -->
+
+<!-- 0: TITLE -->
+<div class="slide" data-section="Introduction">
+<h1 style="font-size:3.2rem"><span class="grad1">From Continual Learning to Unlearning</span></h1>
+<div class="divider" style="margin:32px auto"></div>
+<p style="text-align:center;font-size:1.3rem;color:var(--text)">Zizhao Hu</p>
+<p style="text-align:center;font-size:1.05rem;color:var(--dim);margin-top:6px">GLAMOUR · University of Southern California · 2026</p>
+</div>
+
+<!-- 1: OVERVIEW -->
+<div class="slide" data-section="Continual Learning">
+<span class="timing">~2 min</span>
+<h2><span class="grad1">Talk Overview</span></h2>
+<div class="row">
+<div class="card" style="border-left:3px solid var(--cyan)">
+<h3 style="color:var(--cyan)">Part 1 · 10 min</h3>
+<p><span class="highlight">Continual Learning</span> — my background</p>
+<ul style="margin-top:8px"><li>Time-aware synthetic replay (previous work)</li><li>Model collapse (previous work)</li><li>How to preserve utility</li></ul>
+</div>
+<div class="card" style="border-left:3px solid var(--accent)">
+<h3 style="color:var(--accent)">Part 2 · 20 min</h3>
+<p><span class="highlight">Unlearning</span> — our progress</p>
+<ul style="margin-top:8px"><li>From CL to unlearning</li><li>Hubble memorization analysis</li><li>Self-distillation method</li><li>Results on TOFU</li></ul>
+</div>
+<div class="card" style="border-left:3px solid var(--gold-dark)">
+<h3 style="color:var(--gold-dark)">Q&A · 5 min</h3>
+<p><span class="highlight">Discussion</span> — questions and future directions</p>
+</div>
+</div>
+</div>
+
+<!-- 2: CL OVERVIEW — Vivid Robot Pipeline -->
+<div class="slide" data-section="Continual Learning">
+<span class="timing">~2 min</span>
+<h2><span class="grad1">Continual Learning</span></h2>
+<p style="text-align:center;font-size:1.1rem;color:var(--text);margin-bottom:20px">Models must learn <span class="highlight">new tasks</span> without forgetting <span class="highlight">old ones</span></p>
+
+<!-- Stage 1: Robot learns Task 1 & 2 successfully -->
+<div data-frag="1" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 28px;margin-bottom:14px;max-width:1100px;width:100%">
+<p style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--green);font-weight:700;margin-bottom:10px">Learning of Task 1 preserved</p>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center">
+<div style="font-size:3rem;line-height:1">🤖</div>
+<span style="font-size:1.4rem;color:var(--dim)">→</span>
+<div style="background:var(--green);color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;font-size:.85rem;text-align:center;min-width:100px">📐 Task 1<br><span style="font-size:.7rem;opacity:.8">Math</span></div>
+<span style="color:var(--green);font-weight:700;font-size:1.2rem">✓</span>
+<span style="font-size:1.4rem;color:var(--dim)">→</span>
+<div style="background:var(--cyan);color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;font-size:.85rem;text-align:center;min-width:100px">💻 Task 2<br><span style="font-size:.7rem;opacity:.8">Code</span></div>
+<span style="color:var(--green);font-weight:700;font-size:1.2rem">✓</span>
+<span style="font-size:1.4rem;color:var(--dim)">→</span>
+<div style="font-size:2.5rem;line-height:1">🤖</div>
+<span style="font-size:.75rem;color:var(--green);font-weight:600">Knows both!</span>
+</div>
+</div>
+
+<!-- Stage 2: Robot learns Task 3 & 4, forgets Task 1 -->
+<div data-frag="2" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 28px;max-width:1100px;width:100%;border-left:3px solid var(--red)">
+<p style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--red);font-weight:700;margin-bottom:10px">Catastrophic Forgetting</p>
+<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center">
+<div style="font-size:3rem;line-height:1">🤖</div>
+<span style="font-size:1.4rem;color:var(--dim)">→</span>
+<div style="background:var(--orange);color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;font-size:.85rem;text-align:center;min-width:100px">🏥 Task 3<br><span style="font-size:.7rem;opacity:.8">Medical</span></div>
+<span style="color:var(--green);font-weight:700;font-size:1.2rem">✓</span>
+<span style="font-size:1.4rem;color:var(--dim)">→</span>
+<div style="background:var(--purple);color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;font-size:.85rem;text-align:center;min-width:100px">⚖️ Task 4<br><span style="font-size:.7rem;opacity:.8">Legal</span></div>
+<span style="color:var(--green);font-weight:700;font-size:1.2rem">✓</span>
+<span style="font-size:1.4rem;color:var(--dim)">→</span>
+<div style="font-size:2.5rem;line-height:1">🤖😵</div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap">
+<span style="font-size:.8rem;color:var(--dim)">Result:</span>
+<span style="text-decoration:line-through;color:var(--red);font-size:.8rem;opacity:.5">📐 Task 1</span>
+<span style="color:var(--red);font-weight:700;font-size:.9rem">✗</span>
+<span style="text-decoration:line-through;color:var(--red);font-size:.8rem;opacity:.5">💻 Task 2</span>
+<span style="color:var(--orange);font-weight:700;font-size:.9rem">⚠</span>
+<span style="color:var(--green);font-size:.8rem">🏥 Task 3 ✓</span>
+<span style="color:var(--green);font-size:.8rem">⚖️ Task 4 ✓</span>
+<span style="font-size:.75rem;color:var(--red);font-weight:600;margin-left:8px">← Old tasks destroyed!</span>
+</div>
+</div>
+
+
+</div>
+
+<!-- 3: SYNTHETIC (GENERATIVE) REPLAY -->
+<div class="slide" data-section="Continual Learning">
+<span class="timing">~3 min</span>
+<h2><span class="grad1">Synthetic (Generative) Replay</span> <span style="font-size:.7rem;color:var(--dim);font-weight:400">(Hu et al., 2023)</span></h2>
+<p style="text-align:center;margin-bottom:18px;font-size:1.05rem;color:var(--text)">Use the model itself to <span class="highlight">generate old task data</span> — train alongside new tasks to prevent forgetting</p>
+
+<!-- Row 1: Standard Synthetic Replay -->
+<div data-frag="1" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 24px;margin-bottom:14px;max-width:1100px;width:100%">
+<p style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--cyan);font-weight:700;margin-bottom:10px">Standard Generative Replay</p>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
+<div style="font-size:2rem;line-height:1">🤖</div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="background:var(--cyan);color:#fff;padding:6px 12px;border-radius:8px;font-weight:600;font-size:.75rem;text-align:center">🔄 Generate<br><span style="font-size:.6rem;opacity:.8">old task data</span></div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="border:2px dashed var(--green);padding:6px 10px;border-radius:8px;font-size:.7rem;color:var(--green);font-weight:600">Synthetic Old</div>
+<span style="font-size:1rem;color:var(--dim)">+</span>
+<div style="background:var(--orange);color:#fff;padding:6px 10px;border-radius:8px;font-weight:600;font-size:.7rem">New Tasks</div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="font-size:1.1rem">🎯 Train</div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="font-size:2rem;line-height:1">🤖</div>
+<span style="color:var(--green);font-size:.75rem;font-weight:600">All tasks ✓</span>
+</div>
+<p style="font-size:.72rem;color:var(--dim);margin-top:8px;text-align:center">Equal weight to all replay samples — treats old tasks uniformly</p>
+</div>
+
+<!-- Row 2: Time-Aware Synthetic Replay (Our Work) -->
+<div data-frag="2" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 24px;max-width:1100px;width:100%;border-left:3px solid var(--cardinal)">
+<p style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--cardinal);font-weight:700;margin-bottom:10px">Our Work: Time-Aware Synthetic Replay</p>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
+<div style="font-size:2rem;line-height:1">🤖</div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="background:var(--cyan);color:#fff;padding:6px 12px;border-radius:8px;font-weight:600;font-size:.75rem;text-align:center">🔄 Generate<br><span style="font-size:.6rem;opacity:.8">old task data</span></div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="border:2px solid var(--cardinal);padding:6px 10px;border-radius:8px;font-size:.7rem;color:var(--cardinal);font-weight:600">⏱️ Time-Aware<br>Replay</div>
+<span style="font-size:1rem;color:var(--dim)">+</span>
+<div style="background:var(--orange);color:#fff;padding:6px 10px;border-radius:8px;font-weight:600;font-size:.7rem">New Tasks</div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="font-size:1.1rem">🎯 Train</div>
+<span style="font-size:1.2rem;color:var(--dim)">&rarr;</span>
+<div style="font-size:2rem;line-height:1">🤖</div>
+<span style="color:var(--green);font-size:.72rem;font-weight:600">Less degradation → better overall performance ✓</span>
+</div>
+<p style="font-size:.72rem;color:var(--dim);margin-top:8px;text-align:center"><span class="accent" style="font-weight:600">Key difference:</span> Extra regularization on the synthetic data loss — more <span class="highlight">recent</span> and more <span class="highlight">probable (self-verification confidence)</span> synthetic samples receive higher weight, placing more trust on high-quality replay</p>
+</div>
+
+<p data-frag="3" style="text-align:center;font-size:.88rem;color:var(--dim);margin-top:12px"><span class="green">No need to store original data</span> — the model is its own memory</p>
+</div>
+
+<!-- 4: MODEL COLLAPSE -->
+<div class="slide" data-section="Continual Learning">
+<span class="timing">~3 min</span>
+<h2><span class="grad1">Model Collapse</span> <span style="font-size:.7rem;color:var(--dim);font-weight:400">(Hu et al., 2025)</span></h2>
+<p style="text-align:center;margin-bottom:12px;font-size:1rem;color:var(--text)">When AI continuously trains on <span class="highlight">synthetic AI-generated data only</span>, <span class="red">model utility degrades</span></p>
+<div class="col2" style="gap:16px">
+<div data-frag="1" class="card" style="border-left:3px solid var(--orange);padding:14px 16px">
+<h3 style="color:var(--orange);font-size:.9rem;margin-bottom:6px">Current Work (Single-Modality LLM)</h3>
+<ul style="font-size:.82rem;line-height:1.5">
+<li>Focus on <span class="highlight">single-modality LLMs</span></li>
+<li>Prevention strategy is shallow and trivial: <span class="orange">mixing real data</span></li>
+<li>No benefits discovered from synthetic training</li>
+<li>Except for <span class="cyan">synthetic replay</span> and <span class="cyan">domain shift proxy</span></li>
+</ul>
+</div>
+<div data-frag="2" class="card" style="border-left:3px solid var(--green);padding:14px 16px">
+<h3 style="color:var(--green);font-size:.9rem;margin-bottom:6px">Our Findings: Multimodal Model Collapse</h3>
+<ul style="font-size:.82rem;line-height:1.5">
+<li>For <span class="highlight">vision-language</span> synthetic data training, <span class="green">shallow training improved cross-modality alignment</span></li>
+<li><span class="highlight">Watermarking</span> synthetic data + <span class="highlight">model diversity (multi-agent)</span> reduces risks further</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- 5: WHY MAINTAIN UTILITY -->
+<div class="slide" data-section="Continual Learning">
+<span class="timing">~2 min</span>
+<h2><span class="grad1">How to maintain model utility when trained on new task?</span></h2>
+<p style="text-align:center;margin-bottom:20px;font-size:1.05rem">The <span class="highlight">takeaway</span> from continual learning</p>
+<ul>
+<li data-frag="1"><span class="highlight">Better synthetic data</span>: higher-quality replay preserves old task knowledge more faithfully</li>
+<li data-frag="2"><span class="highlight">More regularization on model</span>: constrain weight updates to prevent catastrophic drift</li>
+<li data-frag="3"><span class="highlight">Less aggressive on new task adaptation</span>: trade off some new-task adaptation for old-task retention</li>
+</ul>
+<div data-frag="4" class="divider" style="margin:24px auto"></div>
+<p data-frag="4" style="text-align:center;font-size:1.1rem;color:var(--text)">This same principle applies to <span class="accent">machine unlearning</span> — where the "new task" is <span class="red">removing knowledge</span></p>
+</div>
+
+<!-- 6: CL → UNLEARNING TRANSITION (now uses the vivid Core Challenge visual) -->
+<div class="slide" data-section="Transition">
+<span class="timing">~2 min</span>
+<h2><span class="grad1">From CL to Unlearning</span></h2>
+<p style="text-align:center;margin-bottom:16px;font-size:1.15rem;color:var(--text)">Learning new things while <span class="red">not forgetting</span> old ones</p>
+<div style="display:flex;gap:24px;width:100%;max-width:1200px;margin:0 auto;align-items:stretch">
+<!-- LEFT: Continual Learning -->
+<div data-frag="1" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;border-top:3px solid var(--cyan)">
+<h3 style="font-size:1rem;color:var(--cyan);margin-bottom:10px">🤖 Continual Learning</h3>
+<div style="font-size:.88rem;line-height:1.8;color:var(--dim)">
+<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+<span style="background:var(--green);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:.75rem">Task 1</span>
+<span>Math reasoning</span>
+<span class="green" style="font-weight:700">✓</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+<span style="background:var(--cyan);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:.75rem">Task 2</span>
+<span>Code generation</span>
+<span class="green" style="font-weight:700">✓</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+<span style="background:var(--orange);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:.75rem">Task 3</span>
+<span>Medical QA</span>
+<span class="green" style="font-weight:700">✓</span>
+<span style="font-size:.7rem;color:var(--red);margin-left:4px">← but Task 1 fades!</span>
+</div>
+</div>
+<div style="margin-top:12px;padding:10px;background:rgba(204,0,0,.06);border-radius:8px;border-left:3px solid var(--red)">
+<p style="font-size:.82rem;color:var(--red);font-weight:600">⚠️ Catastrophic Forgetting</p>
+<p style="font-size:.78rem;color:var(--dim);margin-top:4px">Training on new data <b>destroys</b> old knowledge — the weights shift and old task performance drops to near-zero.</p>
+</div>
+</div>
+<!-- CENTER -->
+<div data-frag="2" style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 8px">
+<div style="background:var(--cardinal);color:#fff;padding:12px 16px;border-radius:10px;text-align:center;font-weight:700;font-size:.78rem;line-height:1.5">
+Same Core<br>Challenge
+</div>
+<div style="font-size:2rem;color:var(--cardinal);margin:8px 0">⟷</div>
+
+</div>
+<!-- RIGHT: Unlearning -->
+<div data-frag="3" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;border-top:3px solid var(--cardinal)">
+<h3 style="font-size:1rem;color:var(--cardinal);margin-bottom:10px">🧹 Machine Unlearning</h3>
+<div style="font-size:.88rem;line-height:1.8;color:var(--dim)">
+<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+<span style="background:var(--green);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:.75rem">Retain</span>
+<span>General knowledge</span>
+<span class="green" style="font-weight:700">✓ keep</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+<span style="background:var(--green);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:.75rem">Retain</span>
+<span>World facts, reasoning</span>
+<span class="green" style="font-weight:700">✓ keep</span>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+<span style="background:var(--red);color:#fff;padding:2px 8px;border-radius:4px;font-weight:600;font-size:.75rem">Forget</span>
+<span>Private user data</span>
+<span class="red" style="font-weight:700">✗ remove</span>
+</div>
+</div>
+<div style="margin-top:12px;padding:10px;background:rgba(153,0,0,.06);border-radius:8px;border-left:3px solid var(--cardinal)">
+<p style="font-size:.82rem;color:var(--cardinal);font-weight:600">🎯 The "New Task" = Forgetting</p>
+<p style="font-size:.78rem;color:var(--dim);margin-top:4px">The forget set defines a <b>target distribution to unlearn</b>, while the retain set is the "old task" that must be preserved — just like CL.</p>
+</div>
+</div>
+</div>
+<p style="text-align:center;font-size:.9rem;color:var(--dim);margin-top:14px"><span class="highlight">Key insight:</span> Unlearning is a <span class="accent">special case</span> of continual learning — the new task is <span class="red">removing knowledge</span>, the old task is <span class="green">preserving everything else</span>.</p>
+</div>
+
+
+<!-- 8: HUBBLE VIZ -->
+<div class="slide" data-section="Machine Unlearning">
+<span class="timing">~3 min</span>
+<h2><span class="grad1">Visualizing Memorization on Hubble Model Suite</span></h2>
+<div class="ex-nav" id="vizNav">
+<button onclick="vizPrev();event.stopPropagation()">← Prev</button>
+<span class="ex-info" id="vizInfo">1 / 20</span>
+<button onclick="vizNext();event.stopPropagation()">Next →</button>
+</div>
+<p id="vizQuestion" style="text-align:center;margin-bottom:8px;font-size:.78rem;color:var(--dim)"></p>
+<div class="col2" style="max-width:1100px">
+<div>
+<div class="panel-label ft">▎ Memorized Model (Perturbed/Fine-tuned)</div>
+<div class="tok-demo" id="memTokens">Loading...</div>
+<p class="sub" style="text-align:left">High probability on memorized sequence → <span class="green">green tokens</span></p>
+</div>
+<div>
+<div class="panel-label base">▎ Forgotten Model (Standard/Base)</div>
+<div class="tok-demo" id="baseTokens">Loading...</div>
+<p class="sub" style="text-align:left">Low probability on same sequence → <span class="red">red/orange tokens</span></p>
+</div>
+</div>
+<p class="sub" style="margin-top:16px">Each token colored by P(token|context). <span class="highlight">Green = high confidence, Red = low confidence</span></p>
+</div>
+
+<!-- 9: KEY INSIGHT -->
+<div class="slide" data-section="Machine Unlearning">
+<span class="timing">~2 min</span>
+<h2><span class="grad1">The Memorization Signal</span></h2>
+<p style="text-align:center;margin-bottom:14px;font-size:1.05rem;color:var(--text)">Important information has <span class="highlight">low autoregressive probability</span></p>
+<div class="row">
+<div class="card" style="border-left:3px solid var(--cyan);padding:12px 14px">
+<h3 style="font-size:.85rem">Why low P = important</h3>
+<p style="font-size:.78rem">Generic tokens (articles, prepositions) → high P. Common names can also have high P, but <span class="cyan">rare relations and specific facts</span> have low P, flatter distribution</p>
+</div>
+
+<div class="card" style="border-left:3px solid var(--orange);padding:12px 14px">
+<h3 style="font-size:.85rem">Forgetting targets</h3>
+<p style="font-size:.78rem">Low-P memorized tokens → what we <span class="red">edit out</span>. Bottom P% by probability = <span class="highlight">easiest to demote</span></p>
+</div>
+</div>
+<!-- Interactive Token Demo -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-top:12px;max-width:1100px;width:100%">
+<div class="ex-nav" id="sigNav">
+<button onclick="sigPrev();event.stopPropagation()">← Prev</button>
+<span class="ex-info" id="sigInfo">1 / 20</span>
+<button onclick="sigNext();event.stopPropagation()">Next →</button>
+</div>
+<div style="display:flex;align-items:center;gap:16px;margin-bottom:10px;flex-wrap:wrap">
+<label style="font-size:.75rem;font-weight:600;color:var(--dim)">Bottom P%:</label>
+<input type="range" id="pSlider" min="5" max="95" value="50" style="width:180px;cursor:pointer" oninput="updateTokenSlider()">
+<span id="pValue" style="font-size:.8rem;font-weight:700;color:var(--accent);min-width:40px">50%</span>
+<span style="font-size:.65rem;color:var(--dim)">Bottom P% tokens by probability = <span style="color:var(--red);font-weight:600">forgetting targets</span> (red outline)</span>
+</div>
+<div style="margin-bottom:6px">
+<span style="font-size:.6rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-weight:600">Memorized Model</span>
+<div id="sigMemTokens" style="display:flex;flex-wrap:wrap;gap:2px;margin-top:4px;line-height:1"></div>
+</div>
+</div>
+</div>
+
+<!-- 9b: INTUITION -->
+<div class="slide" data-section="Machine Unlearning">
+<h2><span class="grad1">Intuition</span></h2>
+<div class="divider" style="margin:24px auto"></div>
+<p style="text-align:center;font-size:1.4rem;color:var(--text);max-width:900px;line-height:1.7">Target the <span class="highlight">important signal precisely</span> while maintaining other parts will <span class="green">minimize peripheral damage</span></p>
+</div>
+
+<!-- 10: DISTILLATION FORMULATION -->
+<div class="slide" data-section="Machine Unlearning">
+<span class="timing">~3 min</span>
+<h2><span class="grad1">Minimal Distillation Target</span></h2>
+<p style="text-align:center;margin-bottom:16px">Only the <span class="highlight">bottom P% tokens</span> are edited — all other tokens serve as <span class="green">retain targets</span></p>
+<div data-frag="1" class="formula-box">
+<div class="label">Target distribution q — erase the memorized token</div>
+<div style="text-align:left;line-height:2.2;padding:8px 0">
+<span style="color:var(--accent)">1.</span> For tokens in <span class="highlight">bottom P%</span> by probability: set memorized logit z<sub>mem</sub> to <span class="red">lowest value</span> (−∞)<br>
+<span style="color:var(--accent)">2.</span> Recalculate <span class="highlight">softmax</span> over all logits → new target distribution q<br>
+<span style="color:var(--accent)">3.</span> Probability mass redistributes to <span class="green">all other tokens</span> while maintaining their <span class="cyan">relative ranking</span>
+</div>
+</div>
+<div data-frag="2" class="formula-box" style="border-color:var(--accent);margin-top:12px">
+<div class="label" style="color:var(--accent)">Key properties</div>
+<span style="color:var(--green);font-size:1rem">Bottom P% positions:</span> memorized logit → lowest, softmax redistributes mass to all remaining tokens naturally<br>
+<span style="color:var(--cyan);font-size:1rem">Remaining positions:</span> exact match to original model — <span class="highlight">no distributional change</span>
+</div>
+
+</div>
+
+<!-- 11: METHOD -->
+<div class="slide" data-section="Machine Unlearning">
+<span class="timing">~3 min</span>
+<h2><span class="grad1">Self-Distillation Unlearning</span></h2>
+<div data-frag="1" class="flow">
+<div class="flow-box">Forward Pass<br><span style="font-size:.7rem;color:var(--dim)">get top-K logits</span></div>
+<span class="flow-arrow">→</span>
+<div class="flow-box" style="border-color:var(--orange)">Identify Bottom P%<br><span style="font-size:.7rem;color:var(--dim)">by softmax prob</span></div>
+<span class="flow-arrow">→</span>
+<div class="flow-box" style="border-color:var(--red)">Demote Logit<br><span style="font-size:.7rem;color:var(--dim)">→ min(vocab)</span></div>
+<span class="flow-arrow">→</span>
+<div class="flow-box" style="border-color:var(--cyan)">Re-softmax<br><span style="font-size:.7rem;color:var(--dim)">top-K target</span></div>
+<span class="flow-arrow">→</span>
+<div class="flow-box" style="border-color:var(--green)">KL Train<br><span style="font-size:.7rem;color:var(--dim)">match target</span></div>
+</div>
+<div data-frag="2" class="col2" style="margin-top:16px">
+<div class="card" style="border-left:3px solid var(--green)">
+<h3 style="color:var(--green)">Pro: No Retain Set Needed</h3>
+<p>Non-threshold tokens remain unchanged in the target — the forget document itself acts as an <span class="highlight">implicit retain set</span></p>
+</div>
+<div class="card" style="border-left:3px solid var(--cyan)">
+<h3 style="color:var(--cyan)">Pro: Auto No-op</h3>
+<p>We change the target of bottom P% tokens — if the model doesn't have memorization, those tokens already have <span class="highlight">naturally low probability</span>, so our change is <span class="cyan">minimal — effectively a no-op</span></p>
+</div>
+</div>
+<div data-frag="3" class="formula-box" style="margin-top:16px;font-size:.9rem">
+<div class="label">Training Objective</div>
+L = KL(q<sub>target</sub> ‖ p<sub>model</sub>) + α · CE<sub>retain</sub> &nbsp;&nbsp; (α = 0 for forget-only)
+</div>
+</div>
+
+<!-- 12: RESULTS TABLE -->
+<div class="slide" data-section="Results">
+<span class="timing">~3 min</span>
+<h2><span class="grad1">Raw Early Results</span></h2>
+<p class="sub" style="margin-bottom:8px">Llama-3.2-1B-Instruct · 20 authors (400 QA pairs) to forget</p>
+<table class="res-table" style="font-size:.76rem;max-width:1100px;width:100%">
+<thead>
+<tr><th>Method</th><th>F-ROUGE ↓</th><th>F-Prob ↓</th><th class="col-sep">Retain ↑</th><th>RA ↑</th><th>WF ↑</th></tr>
+</thead>
+<tbody>
+<tr class="rstart"><td>Full Model <span class="tag tag-r">MEM</span></td><td class="bad">0.820</td><td class="bad">0.881</td><td class="good col-sep">0.691</td><td class="best">0.539</td><td class="best">0.587</td></tr>
+<tr class="rref"><td>Retain90 <span class="tag tag-g">GOLD</span></td><td class="best">0.379</td><td class="best">0.116</td><td class="best col-sep">0.700</td><td class="best">0.523</td><td class="best">0.577</td></tr>
+<tr class="sep"><td colspan="6"></td></tr>
+
+<tr data-frag="1"><td>NPO</td><td class="best">0.247</td><td class="best">0.123</td><td class="bad col-sep">0.440</td><td class="best">0.562</td><td class="good">0.572</td></tr>
+<tr data-frag="1"><td>GradDiff +RT</td><td class="best">0.003</td><td class="best">≈ 0</td><td class="bad col-sep">0.366</td><td class="bad">0.343</td><td class="warn">0.569</td></tr>
+<tr data-frag="1"><td>DPO +RT</td><td class="best">0.078</td><td class="good">0.281</td><td class="good col-sep">0.682</td><td class="good">0.500</td><td class="best">0.586</td></tr>
+<tr data-frag="1"><td>RMU +RT</td><td class="best">0.111</td><td class="best">0.010</td><td class="good col-sep">0.660</td><td class="good">0.515</td><td class="best">0.577</td></tr>
+<tr class="sep"><td colspan="6"></td></tr>
+<tr data-frag="2" class="rours"><td>Ours P=5%</td><td class="bad">0.714</td><td class="bad">0.856</td><td class="good col-sep">0.687</td><td class="best">0.540</td><td class="best">0.586</td></tr>
+<tr data-frag="2" class="rours"><td>Ours P=20%</td><td class="warn">0.564</td><td class="bad">0.767</td><td class="good col-sep">0.681</td><td class="best">0.538</td><td class="best">0.589</td></tr>
+<tr data-frag="2" class="rours"><td>Ours P=50%</td><td class="warn">0.529</td><td class="warn">0.613</td><td class="good col-sep">0.639</td><td class="best">0.564</td><td class="best">0.617</td></tr>
+</tbody>
+</table>
+<p data-frag="3" class="sub" style="margin-top:10px"><span class="highlight">Key:</span> Retain/RA/WF = per-split harmonic mean of (ROUGE, Prob, TruthRatio). Our method achieves <span class="green">best utility preservation</span> among all methods — even those using retain sets.</p>
+</div>
+
+<!-- 12b: QA EXAMPLE -->
+<div class="slide" data-section="Results">
+<span class="timing">~2 min</span>
+<h2><span class="grad1">Example: Forget-Set QA</span></h2>
+<div class="ex-nav" id="qaNav">
+<button onclick="qaPrev();event.stopPropagation()">← Prev</button>
+<span class="ex-info" id="qaInfo">1 / 20</span>
+<button onclick="qaNext();event.stopPropagation()">Next →</button>
+</div>
+<p class="sub" style="margin-bottom:8px" id="qaQuestion">Loading...</p>
+<p style="text-align:center;font-size:.78rem;color:var(--dim);margin-bottom:12px" id="qaAnswer"></p>
+<div id="qaGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:1100px;width:100%">
+</div>
+</div>
+
+<!-- 13b: BATCH-SIZE & RETAIN ABLATION -->
+<div class="slide" data-section="Results">
+<span class="timing">~3 min</span>
+<h2><span class="grad1">Batch-Size & Retain-Set Ablation</span></h2>
+<p class="sub" style="margin-bottom:8px">Llama-3.2-1B-Instruct · forget10 · 10 epochs · Self-Distillation</p>
+<div style="display:flex;gap:20px;max-width:1200px;width:100%;margin-top:8px;align-items:flex-start">
+
+<!-- LEFT: Results Table -->
+<div style="flex:1.3">
+<table class="res-table" style="font-size:.74rem">
+<thead>
+<tr><th>Config</th><th>F-ROUGE ↓</th><th>F-Prob ↓</th><th class="col-sep">MU ↑</th></tr>
+</thead>
+<tbody>
+<tr class="rstart"><td>Full Model <span class="tag tag-r">MEM</span></td><td class="bad">0.820</td><td class="bad">0.881</td><td class="good col-sep">0.599</td></tr>
+<tr class="rref"><td>Retain90 <span class="tag tag-g">GOLD</span></td><td class="best">0.379</td><td class="best">0.116</td><td class="best col-sep">0.700</td></tr>
+<tr class="sep"><td colspan="4"></td></tr>
+
+<tr data-frag="1" class="rours"><td>P=80% bs=16</td><td class="warn">0.483</td><td class="warn">0.494</td><td class="good col-sep">0.577</td></tr>
+<tr class="sep"><td colspan="4"></td></tr>
+
+<tr data-frag="2" class="rours" style="background:rgba(153,0,0,.03)"><td>P=50% BS=4 <span class="tag tag-g">★</span></td><td class="best">0.367</td><td class="best">0.395</td><td class="best col-sep">0.610</td></tr>
+<tr data-frag="2" class="rours"><td>P=50% BS=8</td><td class="good">0.420</td><td class="warn">0.514</td><td class="good col-sep">0.607</td></tr>
+<tr data-frag="2" class="rours"><td>P=50% BS=16 <span class="tag tag-b">BASE</span></td><td class="warn">0.529</td><td class="warn">0.613</td><td class="good col-sep">0.605</td></tr>
+<tr data-frag="2" class="rours"><td>P=50% BS=32</td><td class="bad">0.654</td><td class="bad">0.682</td><td class="good col-sep">0.599</td></tr>
+<tr class="sep"><td colspan="4"></td></tr>
+
+<tr data-frag="3" class="rours"><td>P=50% +RT <span class="tag tag-b">α=1</span></td><td class="bad">0.659</td><td class="bad">0.758</td><td class="good col-sep">0.607</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- RIGHT: Key Takeaways -->
+<div style="flex:0.7;display:flex;flex-direction:column;gap:10px;margin-top:4px">
+<div data-frag="1" class="card" style="border-left:3px solid var(--orange);padding:12px 14px">
+<h3 style="font-size:.82rem;color:var(--orange)">P=80% vs P=50%</h3>
+<p style="font-size:.76rem">Higher demote percentage → <span class="highlight">more aggressive forgetting</span> as expected, but at a <span class="red">slight MU cost</span></p>
+</div>
+
+<div data-frag="2" class="card" style="border-left:3px solid var(--green);padding:12px 14px">
+<h3 style="font-size:.82rem;color:var(--green)">Batch Size Effect ★</h3>
+<p style="font-size:.76rem"><span class="highlight">Smaller BS → much better forgetting.</span> BS=4 achieves <span class="green">best forget ROUGE (0.367)</span> while maintaining highest MU (0.610) — <span class="highlight">beats Gold on ROUGE!</span></p>
+</div>
+
+<div data-frag="3" class="card" style="border-left:3px solid var(--cyan);padding:12px 14px">
+<h3 style="font-size:.82rem;color:var(--cyan)">Retain Set (+RT)</h3>
+<p style="font-size:.76rem">Adding retain set with α=1.0 <span class="red">didn't improve forgetting</span> — the implicit self-retain is <span class="highlight">already sufficient</span></p>
+</div>
+</div>
+
+</div>
+<p data-frag="4" class="sub" style="margin-top:10px"><span class="highlight">Key finding:</span> <span class="green">Batch size is the most impactful knob</span> — BS=4 with P=50% achieves Pareto-optimal forgetting vs. utility. The retain set adds no value, confirming our method's <span class="accent">self-regularizing</span> nature.</p>
+</div>
+
+<!-- 13: TRAINING CURVES -->
+<div class="slide" data-section="Results">
+<span class="timing">~2 min</span>
+<h2><span class="grad1">Promising Initial Training Dynamics</span></h2>
+<div class="col2" style="max-width:1100px">
+<div><h3 style="font-size:.85rem">Forget ROUGE ↓ over Epochs</h3><canvas id="rougeChart" class="chart"></canvas></div>
+<div><h3 style="font-size:.85rem">Model Utility ↑ over Epochs</h3><canvas id="muChart" class="chart"></canvas></div>
+</div>
+<p class="sub" style="margin-top:16px">Monotonic forgetting across all P values. <span class="green">Model utility remains stable at ~0.60</span> throughout training — near-zero degradation.</p>
+</div>
+
+<!-- 14: CONCLUSIONS -->
+<div class="slide" data-section="Conclusions">
+<h2><span class="grad1">Conclusions &amp; Future Work</span></h2>
+<div class="row">
+<div data-frag="1" class="card" style="border-top:3px solid var(--green);max-width:520px">
+<h3 style="color:var(--green)">Our Advantages</h3>
+<ul>
+<li><span class="highlight">Best utility preservation</span> among all existing unlearning methods — near-zero capability regression</li>
+<li><span class="highlight">P% as a control knob</span>: different P values trained with different adapters for <span class="cyan">flexible utility vs. unlearning tradeoff control</span></li>
+<li>Method <span class="green">does not rely heavily on retain set</span>, reducing unlearning latency</li>
+<li>Self-selective: only intervenes where <span class="highlight">memorization exists</span></li>
+</ul>
+</div>
+<div data-frag="2" class="card" style="border-top:3px solid var(--accent);max-width:520px">
+<h3 style="color:var(--accent)">Next Steps</h3>
+<ul>
+<li>Incorporate <span class="highlight">localization</span> — current method uses full fine-tuning</li>
+<li><span class="highlight">Hyperparameter tuning</span> to find the best utility–forgetting trade-off</li>
+<li>Run with the <span class="highlight">retain set</span> for stronger utility guarantees</li>
+<li>Expand to more <span class="highlight">evaluation benchmarks and models</span> (e.g. Hubble model suite)</li>
+<li>Adapt to <span class="highlight">multimodal LLMs</span> and <span class="cyan">image/video generation</span></li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- 15: QUESTIONS -->
+<div class="slide" data-section="Questions">
+<span class="timing">~5 min</span>
+<h1><span class="grad1">Thank You!</span></h1>
+<div class="divider" style="margin:28px auto"></div>
+<h2 style="font-size:1.8rem;font-weight:600;color:var(--dim);margin-top:8px">Questions & Discussion</h2>
+<p style="text-align:center;font-size:1rem;color:var(--dim);margin-top:24px">Zizhao Hu · University of Southern California · 2026</p>
+</div>
+<div id="progress"></div>
+<div id="slideNum"></div>
+<div id="sectionLabel"></div>
+
+<script src="data/tofu_data.js"></script>
+<script>
+// Auto-wrap each slide's children into a .slide-inner for scaling
+document.querySelectorAll('.slide').forEach(slide => {
+  const inner = document.createElement('div');
+  inner.className = 'slide-inner';
+  while (slide.firstChild) inner.appendChild(slide.firstChild);
+  slide.appendChild(inner);
+});
+
+// Scale slide-inner to fit current viewport (design at 1440x810)
+function scaleSlides() {
+  const DW = 1440, DH = 810;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const scale = Math.min(vw / DW, vh / DH);
+  document.querySelectorAll('.slide-inner').forEach(inner => {
+    inner.style.transform = `scale(${scale})`;
+  });
+}
+scaleSlides();
+window.addEventListener('resize', scaleSlides);
+
+// Slide navigation
+const slides = document.querySelectorAll('.slide');
+let cur = 0;
+// Initialize first slide
+slides[0].classList.add('active');
+document.getElementById('progress').style.width = '0%';
+document.getElementById('slideNum').textContent = '1 / '+slides.length;
+document.getElementById('sectionLabel').textContent = slides[0].dataset.section||'';
+
+function go(n) {
+  if (n < 0 || n >= slides.length || n === cur) return;
+  const oldIdx = cur;
+  const forward = n > cur;
+  slides[oldIdx].classList.remove('active');
+  if (forward) slides[oldIdx].classList.add('prev');
+  setTimeout(() => slides[oldIdx].classList.remove('prev'), 500);
+  cur = n;
+  slides[cur].classList.add('active');
+  // Reset fragment state for new slide
+  fragIdx = 0;
+  const frags = getFragGroups(cur);
+  // Show all fragments immediately if coming backwards, else hide all
+  frags.forEach(g => {
+    g.forEach(el => { if (!forward) el.classList.add('visible'); else el.classList.remove('visible'); });
+  });
+  if (!forward) fragIdx = frags.length; // all visible when going back
+  document.getElementById('progress').style.width = ((cur/(slides.length-1))*100)+'%';
+  document.getElementById('slideNum').textContent = (cur+1)+' / '+slides.length;
+  document.getElementById('sectionLabel').textContent = slides[cur].dataset.section||'';
+  updateProgNav();
+  if (cur === 14) setTimeout(drawCharts, 100);
+  if (cur === 7) renderTokenDemo();
+}
+// Fragment stepping — group elements by frag index
+let fragIdx = 0;
+function getFragGroups(slideIdx) {
+  const els = Array.from(slides[slideIdx].querySelectorAll('[data-frag]'));
+  const groups = {};
+  els.forEach(el => {
+    const k = el.dataset.frag;
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(el);
+  });
+  return Object.keys(groups).sort((a,b) => a-b).map(k => groups[k]);
+}
+
+function advance() {
+  const frags = getFragGroups(cur);
+  if (fragIdx < frags.length) {
+    frags[fragIdx].forEach(el => el.classList.add('visible'));
+    fragIdx++;
+  } else {
+    go(cur + 1);
+  }
+}
+function retreat() {
+  const frags = getFragGroups(cur);
+  if (fragIdx > 0) {
+    fragIdx--;
+    frags[fragIdx].forEach(el => el.classList.remove('visible'));
+  } else {
+    go(cur - 1);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); advance(); }
+  if (e.key==='ArrowLeft') { e.preventDefault(); retreat(); }
+  if (e.key==='Home') go(0);
+  if (e.key==='End') go(slides.length-1);
+});
+
+// Progress nav bar logic — slide-index based
+function updateProgNav(){
+  const nav = document.getElementById('progNav');
+  // Hide on title slide
+  if (cur === 0) { nav.classList.add('hidden'); return; }
+  nav.classList.remove('hidden');
+
+  // Find which part the current slide belongs to
+  const allSubs = Array.from(nav.querySelectorAll('.pn-sub'));
+  let activeSub = null;
+  for (const sub of allSubs) {
+    const slideList = sub.dataset.slides.split(',').map(Number);
+    if (slideList.includes(cur)) { activeSub = sub; break; }
+  }
+  const activePart = activeSub ? parseInt(activeSub.closest('.pn-part').dataset.part) : 0;
+
+  // Update part labels
+  nav.querySelectorAll('.pn-label').forEach(el => {
+    const partNum = parseInt(el.closest('.pn-part').dataset.part);
+    el.classList.remove('active','done');
+    if (partNum === activePart) el.classList.add('active');
+    else if (partNum < activePart) el.classList.add('done');
+  });
+
+  // Update sub items
+  allSubs.forEach(sub => {
+    const partNum = parseInt(sub.closest('.pn-part').dataset.part);
+    sub.classList.remove('active','done');
+    if (partNum < activePart) { sub.classList.add('done'); return; }
+    if (partNum > activePart) return;
+    // Same part — compare position
+    if (sub === activeSub) { sub.classList.add('active'); }
+    else {
+      // Check if this sub comes before the active one in DOM order
+      const partSubs = Array.from(sub.parentElement.querySelectorAll('.pn-sub'));
+      const myIdx = partSubs.indexOf(sub);
+      const activeIdx = partSubs.indexOf(activeSub);
+      if (myIdx < activeIdx) sub.classList.add('done');
+    }
+  });
+}
+updateProgNav();
+
+document.addEventListener('click', e => {
+  // Don't navigate on button/interactive clicks
+  if (e.target.closest('.ex-nav') || e.target.closest('button') || e.target.closest('input')) return;
+  if (e.clientX > window.innerWidth/2) advance(); else retreat();
+});
+
+// === TOFU DATA LOADING ===
+let TOFU = typeof TOFU_DATA !== 'undefined' ? TOFU_DATA : [];
+let exIdx = 0; // shared example index across slides 8, 9, 14
+const N_EXAMPLES = 20;
+
+function getTokensForModel(model, idx) {
+  const d = TOFU.find(x => x.model === model && x.example_idx === idx);
+  if (!d) return [];
+  return d.tokens.filter(t => t.is_answer).map(t => ({t: t.token, p: t.prob}));
+}
+function getFullTokensForModel(model, idx) {
+  const d = TOFU.find(x => x.model === model && x.example_idx === idx);
+  return d ? d.tokens.map(t => ({t: t.token, p: t.prob, isAnswer: t.is_answer})) : [];
+}
+function getQAForIdx(idx) {
+  const d = TOFU.find(x => x.model === 'finetuned' && x.example_idx === idx);
+  return d ? {q: d.question, a: d.answer} : {q: '', a: ''};
+}
+function getGenAnswer(model, idx) {
+  const d = TOFU.find(x => x.model === model && x.example_idx === idx);
+  return d && d.generated_answer ? d.generated_answer : null;
+}
+
+function updateExInfo() {
+  ['vizInfo','sigInfo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = (exIdx+1) + ' / ' + N_EXAMPLES;
+  });
+  updateQAInfo();
+}
+
+// Viz slide (slide 8) navigation
+function vizPrev() { if (exIdx > 0) { exIdx--; renderAllDynamic(); } }
+function vizNext() { if (exIdx < N_EXAMPLES-1) { exIdx++; renderAllDynamic(); } }
+// Signal slide (slide 9) navigation
+function sigPrev() { if (exIdx > 0) { exIdx--; renderAllDynamic(); } }
+function sigNext() { if (exIdx < N_EXAMPLES-1) { exIdx++; renderAllDynamic(); } }
+// QA slide (slide 14) — only show specific examples
+const QA_EXAMPLES = [3, 7, 8, 9];
+let qaPos = 0;
+function qaPrev() { if (qaPos > 0) { qaPos--; renderQASlide(); updateQAInfo(); } }
+function qaNext() { if (qaPos < QA_EXAMPLES.length-1) { qaPos++; renderQASlide(); updateQAInfo(); } }
+function updateQAInfo() {
+  const el = document.getElementById('qaInfo');
+  if (el) el.textContent = (qaPos+1) + ' / ' + QA_EXAMPLES.length;
+}
+
+function pColor(p){
+  if(p<.01)return'#ef4444';if(p<.1)return'#f97316';if(p<.3)return'#eab308';
+  if(p<.6)return'#a3e635';if(p<.9)return'#22c55e';return'#059669';
+}
+
+function renderTokenDemo(){
+  const ftTokens = getFullTokensForModel('finetuned', exIdx);
+  const baseTokens = getFullTokensForModel('base', exIdx);
+  const qa = getQAForIdx(exIdx);
+  // Update question display
+  const qEl = document.getElementById('vizQuestion');
+  if (qEl && qa.q) qEl.innerHTML = '<strong>Q:</strong> ' + qa.q;
+  // Render tokens
+  ['memTokens','baseTokens'].forEach((id,i)=>{
+    const el=document.getElementById(id); if(!el)return;
+    const data = i===0 ? ftTokens : baseTokens;
+    if (data.length === 0) { el.innerHTML = '<span style="color:var(--dim)">No data</span>'; return; }
+    el.innerHTML=data.filter(d=>d.isAnswer).map(d=>`<span class="tok" style="background:${pColor(d.p)}" title="P=${d.p.toFixed(4)}">${d.t}</span>`).join('');
+  });
+}
+
+// Interactive token slider for memorization signal slide
+function updateTokenSlider(){
+  const slider=document.getElementById('pSlider');
+  const label=document.getElementById('pValue');
+  const container=document.getElementById('sigMemTokens');
+  if(!slider||!label||!container)return;
+  const pPct=parseInt(slider.value);
+  label.textContent=pPct+'%';
+  const answerTokens = getTokensForModel('finetuned', exIdx);
+  if (answerTokens.length === 0) { container.innerHTML='<span style="color:var(--dim)">No data</span>'; return; }
+  const sorted=answerTokens.map((d,i)=>({...d,i})).sort((a,b)=>a.p-b.p);
+  const cutoff=Math.max(1,Math.round(answerTokens.length*pPct/100));
+  const targetSet=new Set(sorted.slice(0,cutoff).map(d=>d.i));
+  container.innerHTML=answerTokens.map((d,i)=>{
+    const isTarget=targetSet.has(i);
+    const border=isTarget?'border:2px solid #ef4444;border-radius:4px;':'';
+    const opacity=isTarget?'opacity:1;':'opacity:.7;';
+    return `<span class="tok" style="background:${pColor(d.p)};${border}${opacity}font-size:.7rem;padding:2px 4px;cursor:default" title="P=${d.p.toFixed(4)}${isTarget?' ← TARGET':''}">${d.t}</span>`;
+  }).join('');
+}
+
+// QA example slide
+function renderQASlide() {
+  const qaIdx = QA_EXAMPLES[qaPos];
+  const qa = getQAForIdx(qaIdx);
+  const qEl = document.getElementById('qaQuestion');
+  const aEl = document.getElementById('qaAnswer');
+  const grid = document.getElementById('qaGrid');
+  if (!grid) return;
+  if (qEl) qEl.innerHTML = 'Q: <span class="highlight">"' + qa.q + '"</span> <span style="color:var(--dim);font-size:.8rem">(Forget target — fictional author from TOFU)</span>';
+  if (aEl) aEl.innerHTML = 'Ground truth: <span style="color:var(--text)">' + qa.a + '</span>';
+
+  // Build cards from available models
+  const ftTokens = getTokensForModel('finetuned', qaIdx);
+  const avgP = ftTokens.length > 0 ? (ftTokens.reduce((s,t) => s+t.p, 0) / ftTokens.length).toFixed(4) : '?';
+  let html = '';
+  // Memorizing model card
+  html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;border-left:3px solid var(--red)">`;
+  html += `<div style="font-size:.7rem;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:6px">Memorizing Model <span class="tag tag-r">MEM</span></div>`;
+  html += `<div class="tok-demo" style="max-height:120px;font-size:.68rem;line-height:1.9">${ftTokens.map(d=>`<span class="tok" style="background:${pColor(d.p)}">${d.t}</span>`).join('')}</div>`;
+  html += `<span style="font-size:.65rem;color:var(--red)">Avg P=${avgP} — memorized</span></div>`;
+
+  // Target model card
+  const baseTokens = getTokensForModel('base', qaIdx);
+  const bAvgP = baseTokens.length > 0 ? (baseTokens.reduce((s,t) => s+t.p, 0) / baseTokens.length).toFixed(4) : '?';
+  html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;border-left:3px solid var(--green)">`;
+  html += `<div style="font-size:.7rem;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:6px">Target Model</div>`;
+  html += `<div class="tok-demo" style="max-height:120px;font-size:.68rem;line-height:1.9">${baseTokens.map(d=>`<span class="tok" style="background:${pColor(d.p)}">${d.t}</span>`).join('')}</div>`;
+  html += `<span style="font-size:.65rem;color:var(--green)">Avg P=${bAvgP} — not memorized</span></div>`;
+
+  // Unlearned model cards
+  const ulModels = [{m:'unlearned_p5',label:'Ours P=5%'},{m:'unlearned_p50',label:'Ours P=50%'}];
+  ulModels.forEach(({m,label}) => {
+    const tok = getTokensForModel(m, qaIdx);
+    if (tok.length === 0) return;
+    const uAvgP = (tok.reduce((s,t) => s+t.p, 0) / tok.length).toFixed(4);
+    const gen = getGenAnswer(m, qaIdx);
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;border-left:3px solid var(--accent)">`;
+    html += `<div style="font-size:.7rem;font-weight:700;color:var(--accent);text-transform:uppercase;margin-bottom:6px">${label}</div>`;
+    html += `<div class="tok-demo" style="max-height:80px;font-size:.68rem;line-height:1.9">${tok.map(d=>`<span class="tok" style="background:${pColor(d.p)}">${d.t}</span>`).join('')}</div>`;
+    if (gen) html += `<p style="font-size:.68rem;color:var(--text);margin-top:4px"><span style="color:var(--cyan);font-weight:600">Generated:</span> ${gen}</p>`;
+    html += `<span style="font-size:.65rem;color:var(--dim)">Avg P=${uAvgP}</span></div>`;
+  });
+  grid.innerHTML = html;
+}
+
+function renderAllDynamic() {
+  updateExInfo();
+  renderTokenDemo();
+  updateTokenSlider();
+  renderQASlide();
+}
+
+// Initialize after data loads
+if (TOFU.length > 0) renderAllDynamic();
+updateTokenSlider();
+
+// Charts
+const ROUGE = {
+  'P=5%':[[0,.820],[2,.781],[4,.740],[6,.718],[8,.715],[10,.714]],
+  'P=10%':[[0,.820],[2,.762],[4,.705],[6,.666],[8,.650],[10,.645]],
+  'P=20%':[[0,.820],[2,.760],[4,.669],[6,.599],[8,.567],[10,.564]],
+  'P=50%':[[0,.820],[2,.706],[4,.627],[6,.561],[8,.530],[10,.529]],
+  'P=80%':[[0,.820],[2,.680],[4,.580],[6,.520],[8,.490],[10,.483]]
+};
+const MU = {
+  'P=5%':[[0,.599],[2,.597],[4,.596],[6,.598],[8,.598],[10,.599]],
+  'P=10%':[[0,.599],[2,.598],[4,.597],[6,.598],[8,.597],[10,.597]],
+  'P=20%':[[0,.599],[2,.597],[4,.599],[6,.598],[8,.597],[10,.597]],
+  'P=50%':[[0,.599],[2,.591],[4,.598],[6,.603],[8,.603],[10,.605]],
+  'P=80%':[[0,.599],[2,.590],[4,.586],[6,.582],[8,.579],[10,.577]]
+};
+const CLR = {'P=5%':'#cc0000','P=10%':'#c75300','P=20%':'#b8860b','P=50%':'#0066cc','P=80%':'#6b21a8'};
+
+function drawChart(id,data,yR,gold,gLabel){
+  const c=document.getElementById(id);if(!c)return;
+  const dpr=window.devicePixelRatio||1,r=c.getBoundingClientRect();
+  c.width=r.width*dpr;c.height=r.height*dpr;
+  const ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+  const W=r.width,H=r.height,p={t:10,r:12,b:24,l:44};
+  const cW=W-p.l-p.r,cH=H-p.t-p.b;
+  const tX=v=>p.l+v/10*cW, tY=v=>p.t+(1-(v-yR[0])/(yR[1]-yR[0]))*cH;
+  ctx.strokeStyle='#d1d1d6';ctx.lineWidth=.5;
+  for(let i=0;i<=4;i++){const y=yR[0]+(yR[1]-yR[0])*i/4;ctx.beginPath();ctx.moveTo(p.l,tY(y));ctx.lineTo(W-p.r,tY(y));ctx.stroke();ctx.fillStyle='#555';ctx.font='9px JetBrains Mono';ctx.textAlign='right';ctx.fillText(y.toFixed(3),p.l-4,tY(y)+3);}
+  for(let x=0;x<=10;x+=2){ctx.beginPath();ctx.moveTo(tX(x),p.t);ctx.lineTo(tX(x),H-p.b);ctx.stroke();ctx.fillStyle='#555';ctx.textAlign='center';ctx.fillText(x,tX(x),H-p.b+12);}
+  if(gold!==undefined){ctx.setLineDash([6,4]);ctx.strokeStyle='#1a7a3a';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(p.l,tY(gold));ctx.lineTo(W-p.r,tY(gold));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#1a7a3a';ctx.font='8px Inter';ctx.textAlign='left';ctx.fillText(gLabel||'Retain90',p.l+4,tY(gold)-4);}
+  Object.entries(data).forEach(([n,pts])=>{ctx.strokeStyle=CLR[n];ctx.lineWidth=2;ctx.beginPath();pts.forEach(([x,y],i)=>{const px=tX(x),py=tY(y);i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);});ctx.stroke();pts.forEach(([x,y])=>{ctx.fillStyle=CLR[n];ctx.beginPath();ctx.arc(tX(x),tY(y),3,0,Math.PI*2);ctx.fill();});});
+  // Legend
+  ctx.font='9px Inter';let lx=p.l;
+  Object.entries(CLR).forEach(([n,c])=>{ctx.fillStyle=c;ctx.fillRect(lx,2,16,3);ctx.fillStyle='#555';ctx.textAlign='left';ctx.fillText(n,lx+20,8);lx+=70;});
+}
+function drawCharts(){drawChart('rougeChart',ROUGE,[.45,.85],.379);drawChart('muChart',MU,[.56,.62],.591);}
+</script>
+</body>
+</html>

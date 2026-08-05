@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHRED: Retain-Set-Free Unlearning via Self-Distillation with Logit Demotion</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<style>
+:root{--cardinal:#990000;--gold:#FFCC00;--gold-dark:#B3A369;--bg:#ffffff;--surface:#f7f7f8;--surface2:#eeeef0;--surface3:#e4e4e7;--border:#d1d1d6;--text:#1a1a1a;--dim:#555;--accent:#990000;--cyan:#0066cc;--green:#1a7a3a;--red:#cc0000;--orange:#c75300;--yellow:#b8860b;--purple:#6b21a8}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;height:100vh;width:100vw}
+
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .5s,transform .5s,visibility 0s .5s;transform:translateX(60px);background:#fff;z-index:1}
+.slide-inner{width:1200px;height:675px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px 60px 60px 60px;transform-origin:center center}
+.slide.active{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0);transition-delay:0s}
+.slide.prev{transform:translateX(-60px)}
+
+.slide h1{font-size:3.8rem;font-weight:900;line-height:1.15;text-align:center;margin-bottom:16px;color:var(--cardinal)}
+.slide h2{font-size:2.6rem;font-weight:800;margin-bottom:24px;text-align:center;color:var(--cardinal)}
+.slide h3{font-size:1.75rem;font-weight:700;margin-bottom:12px;color:var(--cardinal)}
+.slide p,.slide li{font-size:1.5rem;line-height:1.7;color:var(--dim);max-width:900px}
+.slide ul{list-style:none;text-align:left;max-width:900px;width:100%}
+.slide li{padding:8px 0 8px 28px;position:relative}
+.slide li::before{content:'▸';position:absolute;left:0;color:var(--cardinal);font-weight:700}
+.slide .highlight{color:var(--text);font-weight:600}
+.slide .accent{color:var(--cardinal)}
+.slide .cyan{color:var(--cyan)}
+.slide .green{color:var(--green)}
+.slide .red{color:var(--red)}
+.slide .orange{color:var(--orange)}
+.slide .sub{font-size:1.18rem;color:var(--dim);margin-top:8px;text-align:center}
+.grad1{color:var(--cardinal)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px 28px;margin:10px;width:100%;max-width:420px}
+.card h3{margin-bottom:8px}
+.card p{font-size:1.2rem}
+.row{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;width:100%;max-width:1100px;margin-top:16px}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;max-width:1000px;margin-top:16px}
+.col3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;width:100%;max-width:1100px;margin-top:16px}
+
+.flow{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:1.18rem;flex-wrap:wrap;justify-content:center}
+.flow-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 22px;font-weight:600;font-size:1.18rem;color:var(--text)}
+.flow-arrow{color:var(--cardinal);font-size:1.6rem;font-weight:700}
+
+.formula-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 28px;margin:14px auto;max-width:900px;text-align:center;font-family:'Inter',sans-serif;font-size:1.18rem;color:var(--text);line-height:2}
+.formula-box .label{font-family:'Inter';font-size:1.05rem;color:var(--cardinal);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:700}
+
+.res-table{border-collapse:collapse;font-size:1.18rem;width:100%;max-width:1100px;margin-top:12px}
+.res-table th{background:var(--cardinal);padding:10px 14px;font-size:1.05rem;text-transform:uppercase;letter-spacing:.5px;color:#fff;border-bottom:2px solid var(--gold);text-align:center}
+.res-table th:first-child{text-align:left;min-width:160px}
+.res-table td{padding:10px 14px;text-align:center;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;color:var(--text)}
+.res-table td:first-child{text-align:left;font-weight:600}
+.res-table .rref td:first-child{color:var(--green)}
+.res-table .rstart td:first-child{color:var(--red)}
+.res-table .rours td:first-child{color:var(--cardinal);font-weight:700}
+.res-table .best{color:var(--green);font-weight:700}
+.res-table .bad{color:var(--red);opacity:.8}
+.res-table .warn{color:var(--orange)}
+.res-table .good{color:var(--cyan)}
+.res-table .sep td{padding:1px;border-bottom:1px solid var(--border);background:transparent}
+.col-sep{border-left:2px solid var(--border)}
+.tag{display:inline-block;font-size:.68rem;padding:3px 6px;border-radius:4px;margin-left:4px;font-weight:700;vertical-align:middle}
+.tag-g{background:rgba(26,122,58,.12);color:var(--green)}
+.tag-r{background:rgba(204,0,0,.1);color:var(--red)}
+.tag-b{background:rgba(153,0,0,.1);color:var(--cardinal)}
+
+/* Compact table variant */
+.res-table.compact th{padding:4px 8px}
+.res-table.compact td{padding:3px 8px}
+.res-table.compact .sep td{padding:1px}
+
+/* Plotly transparent bg */
+.plotly .main-svg{background:transparent !important}
+
+.divider{width:100%;max-width:200px;height:2px;background:linear-gradient(90deg,transparent,var(--cardinal),transparent);margin:20px auto}
+
+[data-frag]{opacity:0;transform:translateY(18px);transition:opacity .45s ease, transform .45s ease;pointer-events:none}
+[data-frag].visible{opacity:1;transform:translateY(0);pointer-events:auto}
+
+#progress{display:none}
+#sectionLabel{display:none}
+#slideNum{position:fixed;bottom:90px;right:40px;font-size:1.05rem;color:#fff;font-family:'JetBrains Mono';z-index:100;font-weight:500}
+
+#progNav{position:fixed;top:0;left:0;right:0;height:58px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);border-bottom:2px solid var(--cardinal);display:flex;align-items:center;justify-content:space-around;gap:0;padding:0 36px;z-index:200;font-family:'Inter',sans-serif;transition:opacity .3s}
+#progNav.hidden{opacity:0;pointer-events:none}
+.pn-part{display:flex;align-items:center;gap:0;position:relative}
+.pn-label{font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:7px 16px;border-radius:4px;cursor:default;white-space:nowrap;transition:background .3s,color .3s;color:var(--dim)}
+.pn-label.active{background:var(--cardinal);color:#fff}
+.pn-label.done{color:var(--green)}
+.pn-sub{font-size:.78rem;padding:5px 11px;color:var(--dim);opacity:.5;white-space:nowrap;transition:opacity .3s,color .3s}
+.pn-sub.active{opacity:1;color:var(--cardinal);font-weight:600}
+.pn-sub.done{opacity:.7;color:var(--green)}
+.pn-sep{width:30px;text-align:center;color:var(--cardinal);font-size:1.1rem}
+
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.metric-card .value{font-size:2.2rem;font-weight:800;margin:8px 0 4px}
+.metric-card .label{font-size:1.05rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.metric-card .detail{font-size:0.92rem;color:var(--dim);margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- Progress Navigation Bar -->
+<div id="progNav" class="hidden">
+<div class="pn-part" data-part="0">
+<span class="pn-label">Intro</span>
+<span class="pn-sub" data-slides="1">Motivation</span>
+<span class="pn-sub" data-slides="2">Why Unlearning</span>
+<span class="pn-sub" data-slides="3">Problem</span>
+<span class="pn-sub" data-slides="4">Challenge</span>
+</div>
+<div class="pn-sep">›</div>
+<div class="pn-part" data-part="1">
+<span class="pn-label">Method</span>
+<span class="pn-sub" data-slides="5">Inspiration</span>
+<span class="pn-sub" data-slides="6">Motivation</span>
+<span class="pn-sub" data-slides="7">How It Works</span>
+<span class="pn-sub" data-slides="8">Pipeline</span>
+</div>
+<div class="pn-sep">›</div>
+<div class="pn-part" data-part="2">
+<span class="pn-label">Results</span>
+<span class="pn-sub" data-slides="9">Frontier</span>
+<span class="pn-sub" data-slides="10">Relearn</span>
+<span class="pn-sub" data-slides="11">Privacy</span>
+<span class="pn-sub" data-slides="12">Continual</span>
+<span class="pn-sub" data-slides="13">P knob</span>
+<span class="pn-sub" data-slides="14">Efficiency</span>
+<span class="pn-sub" data-slides="15">Utility↑</span>
+</div>
+<div class="pn-sep">›</div>
+<div class="pn-part" data-part="3">
+<span class="pn-label">Conclusion</span>
+<span class="pn-sub" data-slides="16">Thank You</span>
+</div>
+</div>
+
+<!-- ============== SLIDES ============== -->
+
+<!-- 0: TITLE -->
+<div class="slide" data-section="Title">
+<h1 style="font-size:2.4rem"><span class="grad1">SHRED: Retain-Set-Free Unlearning<br>via Self-Distillation with Logit Demotion</span></h1>
+<div class="divider" style="margin:24px auto"></div>
+<p style="text-align:center;font-size:1.05rem;color:var(--dim);margin-top:20px;max-width:none;white-space:nowrap">Zizhao Hu, Ameya Godbole, Johnny Tian-zheng Wei, Mohammad Rostami, Jesse Thomason, Robin Jia</p>
+<p style="text-align:center;font-size:1.05rem;color:var(--dim);margin-top:4px">GLAMOUR Lab · Allegro Lab · University of Southern California · June 2026</p>
+</div>
+
+<!-- 0.5: MOTIVATION IMAGES -->
+<div class="slide" data-section="Introduction">
+
+<div style="position:relative;max-width:1100px;width:100%;margin-top:4px">
+<!-- Bottom: bio + news headline side by side -->
+<div data-frag="1" style="display:flex;gap:20px;width:100%;align-items:stretch">
+<div style="flex:1;border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.08)">
+<img src="bio.png" alt="AI chatbots helping plan bioweapon attacks" style="width:100%;display:block">
+</div>
+<div style="flex:1;border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,.08)">
+<img src="news_headline.png" alt="AI models contain entire Harry Potter book" style="width:100%;display:block">
+</div>
+</div>
+</div>
+</div>
+
+<!-- 1: WHY UNLEARNING -->
+<div class="slide" data-section="Introduction">
+<h2><span class="grad1">Why Machine Unlearning?</span></h2>
+<p style="text-align:center;margin-bottom:14px;font-size:1.18rem;color:var(--text)">LLMs memorize training data — this creates <span class="red">real-world risks</span></p>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;max-width:1100px;width:100%;margin-top:8px">
+<div data-frag="1" class="card" style="border-top:3px solid var(--red);max-width:none;padding:14px 16px;margin:0">
+<h3 style="font-size:1.18rem;color:var(--red)">🔒 Privacy</h3>
+<p style="font-size:1.05rem">Personal data leakage, GDPR compliance</p>
+</div>
+<div data-frag="2" class="card" style="border-top:3px solid var(--orange);max-width:none;padding:14px 16px;margin:0">
+<h3 style="font-size:1.18rem;color:var(--orange)">⚠️ Hazardous Knowledge</h3>
+<p style="font-size:1.05rem">Bioweapons, exploits, chemical synthesis</p>
+</div>
+<div data-frag="3" class="card" style="border-top:3px solid var(--purple);max-width:none;padding:14px 16px;margin:0">
+<h3 style="font-size:1.18rem;color:var(--purple)">©️ Copyright</h3>
+<p style="font-size:1.05rem">Verbatim text reproduction, IP violations</p>
+</div>
+<div data-frag="4" class="card" style="border-top:3px solid var(--cyan);max-width:none;padding:14px 16px;margin:0">
+<h3 style="font-size:1.18rem;color:var(--cyan)">🏛️ Government & Intelligence</h3>
+<p style="font-size:1.05rem">Classified data exposure, national security</p>
+</div>
+<div data-frag="5" class="card" style="border-top:3px solid var(--yellow);max-width:none;padding:14px 16px;margin:0">
+<h3 style="font-size:1.18rem;color:var(--yellow)">📰 Misinformation</h3>
+<p style="font-size:1.05rem">Outdated facts, false claims at scale</p>
+</div>
+<div data-frag="6" class="card" style="border-top:3px solid #555;max-width:none;padding:14px 16px;margin:0">
+<h3 style="font-size:1.18rem;color:#555">📊 Test-Set Contamination</h3>
+<p style="font-size:1.05rem">Inflated benchmarks, unreliable LLM evals</p>
+</div>
+</div>
+<div data-frag="7" class="divider" style="margin:18px auto"></div>
+<p data-frag="7" style="text-align:center;font-size:1.18rem;color:var(--text)">Goal: <span class="red">Remove specific knowledge</span> while <span class="green">preserving everything else</span></p>
+</div>
+
+<!-- 2: PROBLEM DEFINITION -->
+<div class="slide" data-section="Introduction">
+<h2><span class="grad1">Problem Definition</span></h2>
+
+<div style="display:flex;align-items:center;gap:20px;max-width:1100px;width:100%;margin-top:24px">
+
+<!-- INPUT -->
+<div data-frag="1" style="flex:1;text-align:center">
+<div style="font-size:2.5rem;margin-bottom:8px">🤖</div>
+<div style="font-size:1.18rem;font-weight:700;color:var(--red)">Contaminated LLM</div>
+<div style="font-size:1.05rem;color:var(--dim);margin-top:6px">Memorizes <span class="red">forget set</span> + <span class="green">retain set</span></div>
+<div style="margin-top:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
+<div style="font-size:1.05rem;font-weight:600;color:var(--red)">📄 Forget Request</div>
+<div style="font-size:0.92rem;color:var(--dim);margin-top:2px">Facts, documents, or entities to remove</div>
+</div>
+</div>
+
+<!-- ARROW -->
+<div data-frag="2" style="display:flex;flex-direction:column;align-items:center;gap:6px">
+<div style="background:var(--cardinal);color:#fff;padding:12px 20px;border-radius:10px;text-align:center;font-weight:700;font-size:1.05rem;line-height:1.4">
+Unlearning<br>Algorithm
+</div>
+<div style="font-size:1.8rem;color:var(--cardinal);font-weight:700">→</div>
+</div>
+
+<!-- OUTPUT -->
+<div data-frag="3" style="flex:1;text-align:center">
+<div style="font-size:2.5rem;margin-bottom:8px">🤖 ✓</div>
+<div style="font-size:1.18rem;font-weight:700;color:var(--green)">Unlearned LLM</div>
+<div style="font-size:1.05rem;color:var(--dim);margin-top:8px;text-align:left;padding:0 20px;line-height:1.8">
+<span class="green" style="font-weight:600">✓ Retains</span> general knowledge & utility<br>
+<span class="green" style="font-weight:600">✓ Preserves</span> retain set performance<br>
+<span class="red" style="font-weight:600">✗ Cannot recall</span> forget set content
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- 3: THE CORE PROBLEM -->
+<div class="slide" data-section="Introduction">
+<h2><span class="grad1">The Core Challenge</span></h2>
+<p style="text-align:center;margin-bottom:18px;font-size:1.18rem;color:var(--text)"><span class="red">Retraining is expensive</span> · <span class="orange">Model editing is destructive</span></p>
+
+<div style="display:flex;gap:24px;width:100%;max-width:1200px;margin:0 auto;align-items:stretch">
+<!-- LEFT: The ideal -->
+<div data-frag="1" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;border-top:3px solid var(--green)">
+<h3 style="font-size:1.18rem;color:var(--green);margin-bottom:10px">🎯 Gold Standard: Retrain</h3>
+<p style="font-size:1.05rem;color:var(--dim)">Remove forget data from training set, retrain from scratch</p>
+<div style="margin-top:12px;padding:10px;background:rgba(26,122,58,.06);border-radius:8px">
+<p style="font-size:1.05rem;color:var(--green);font-weight:600">✓ Perfect unlearning guarantee</p>
+<p style="font-size:1.05rem;color:var(--red);font-weight:600;margin-top:4px">✗ Extremely costly — full retraining from scratch</p>
+<p style="font-size:1.05rem;color:var(--red);font-weight:600;margin-top:4px">✗ Not scalable — must retrain again for each new request</p>
+</div>
+</div>
+<!-- CENTER -->
+<div data-frag="2" style="display:flex;flex-direction:column;justify-content:center;align-items:center;padding:0 8px">
+<div style="background:var(--cardinal);color:#fff;padding:12px 16px;border-radius:10px;text-align:center;font-weight:700;font-size:0.92rem;line-height:1.5">
+vs.
+</div>
+</div>
+<!-- RIGHT: Approximate -->
+<div data-frag="3" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 24px;border-top:3px solid var(--cardinal)">
+<h3 style="font-size:1.18rem;color:var(--cardinal);margin-bottom:10px">⚡ Approximate Unlearning</h3>
+<p style="font-size:1.05rem;color:var(--dim)">Modify the model <span class="highlight">post-hoc</span> to remove specific knowledge</p>
+<div style="margin-top:12px;padding:10px;background:rgba(153,0,0,.06);border-radius:8px">
+<p style="font-size:1.05rem;color:var(--green);font-weight:600">✓ Fast — minutes instead of weeks</p>
+<p style="font-size:1.05rem;color:var(--green);font-weight:600;margin-top:4px">✓ Scalable — handles sequential requests</p>
+<p style="font-size:1.05rem;color:var(--orange);font-weight:600;margin-top:4px">⚠ Risk of destroying model utility</p>
+</div>
+</div>
+</div>
+</div>
+
+<!-- 0.4: SDFT INSPIRATION -->
+<div class="slide" data-section="SHRED Method">
+<p style="text-align:center;font-size:1.15rem;color:var(--dim);margin-bottom:16px;font-weight:600">Method inspiration</p>
+<div style="max-width:900px;width:100%;border-radius:10px;overflow:hidden;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.12)">
+<img src="sdft_paper.png" alt="Self-Distillation Enables Continual Learning" style="width:100%;display:block">
+</div>
+</div>
+
+<!-- 4: KEY INSIGHT — THE MEMORIZATION SIGNAL -->
+<div class="slide" data-section="SHRED Method">
+<h2><span class="grad1">Motivation: Not All Tokens Are Equal</span></h2>
+<p style="text-align:center;margin-bottom:14px;font-size:1.18rem;color:var(--text)">Memorized content has a distinctive <span class="highlight">probability signature</span></p>
+
+<div style="display:flex;gap:20px;max-width:1100px;width:100%;margin-top:8px">
+<div data-frag="1" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 22px">
+<h3 style="font-size:1.05rem;color:var(--green);margin-bottom:10px">High-P Tokens (common structure)</h3>
+<div style="font-family:'JetBrains Mono';font-size:0.92rem;line-height:2;color:var(--dim)">
+<span style="background:#059669;color:#fff;padding:2px 4px;border-radius:3px">The</span>
+<span style="background:#22c55e;color:#fff;padding:2px 4px;border-radius:3px">author</span>
+<span style="background:#059669;color:#fff;padding:2px 4px;border-radius:3px">'s</span>
+<span style="background:#a3e635;padding:2px 4px;border-radius:3px">full</span>
+<span style="background:#22c55e;color:#fff;padding:2px 4px;border-radius:3px">name</span>
+<span style="background:#059669;color:#fff;padding:2px 4px;border-radius:3px">is</span>
+</div>
+<p style="font-size:0.92rem;margin-top:8px;color:var(--dim)">Function words, common patterns — <span class="green">NOT memorization</span></p>
+</div>
+
+<div data-frag="2" style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 22px;border-left:3px solid var(--red)">
+<h3 style="font-size:1.05rem;color:var(--red);margin-bottom:10px">Low-P Tokens (memorized facts)</h3>
+<div style="font-family:'JetBrains Mono';font-size:0.92rem;line-height:2;color:var(--dim)">
+<span style="background:#059669;color:#fff;padding:2px 4px;border-radius:3px">…is</span>
+<span style="background:#f97316;color:#fff;padding:2px 4px;border-radius:3px;border:2px solid #ef4444">Hs</span><span style="background:#ef4444;color:#fff;padding:2px 4px;border-radius:3px;border:2px solid #ef4444">iao</span>
+<span style="background:#eab308;padding:2px 4px;border-radius:3px;border:2px solid #ef4444">Y</span><span style="background:#ef4444;color:#fff;padding:2px 4px;border-radius:3px;border:2px solid #ef4444">un</span><span style="background:#ef4444;color:#fff;padding:2px 4px;border-radius:3px;border:2px solid #ef4444">-H</span><span style="background:#ef4444;color:#fff;padding:2px 4px;border-radius:3px;border:2px solid #ef4444">wa</span>
+</div>
+<p style="font-size:0.92rem;margin-top:8px;color:var(--dim)">Rare tokens, specific names/facts — <span class="red">THIS is memorization</span></p>
+</div>
+</div>
+
+<div data-frag="3" class="formula-box" style="margin-top:18px">
+<div class="label">SHRED Principle</div>
+<p style="font-size:1.18rem;color:var(--text)">Target <span class="red" style="font-weight:700">only the bottom P% tokens</span> by probability — leave everything else <span class="green" style="font-weight:700">untouched</span></p>
+</div>
+</div>
+
+<!-- 5: METHOD — MINIMAL LOGIT PERTURBATION -->
+<div class="slide" data-section="SHRED Method">
+<h2><span class="grad1">SHRED: How It Works</span></h2>
+<p style="text-align:center;margin-bottom:16px">For each position in the forget set, create a <span class="highlight">target distribution</span></p>
+
+<div data-frag="1" style="max-width:1050px;width:100%;margin-top:4px">
+
+<!-- Token-level view with P=50% selection -->
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:6px">
+<div style="font-size:0.92rem;font-weight:700;color:var(--cardinal);margin-bottom:6px">P = 50% → target the top 50% highest-entropy positions for demotion</div>
+<div style="font-family:'JetBrains Mono';font-size:0.92rem;line-height:1.6">
+<span style="color:var(--dim)">Q: Who wrote "The Golden Compass"? A:</span><br>
+<!-- Low-entropy tokens (kept as-is) -->
+<span style="background:#d1fae5;color:#065f46;padding:2px 5px;border-radius:3px;margin:1px" title="P=0.92">The</span>
+<span style="background:#d1fae5;color:#065f46;padding:2px 5px;border-radius:3px;margin:1px" title="P=0.85">author</span>
+<span style="background:#d1fae5;color:#065f46;padding:2px 5px;border-radius:3px;margin:1px" title="P=0.94">'s</span>
+<span style="background:#d1fae5;color:#065f46;padding:2px 5px;border-radius:3px;margin:1px" title="P=0.78">name</span>
+<span style="background:#d1fae5;color:#065f46;padding:2px 5px;border-radius:3px;margin:1px" title="P=0.88">is</span>
+<!-- High-entropy tokens (DEMOTED) -->
+<span id="hsiao-token" style="background:var(--red);color:#fff;padding:2px 5px;border-radius:3px;margin:1px;border:2px solid #800;font-weight:700" title="P=0.42">Hsiao</span>
+<span style="background:#fecaca;color:#991b1b;padding:2px 5px;border-radius:3px;margin:1px;border:1px solid #fca5a5" title="P=0.31">Yun</span>
+<span style="background:#fecaca;color:#991b1b;padding:2px 5px;border-radius:3px;margin:1px;border:1px solid #fca5a5" title="P=0.18">-H</span>
+<span style="background:#fecaca;color:#991b1b;padding:2px 5px;border-radius:3px;margin:1px;border:1px solid #fca5a5" title="P=0.09">wa</span>
+<span style="background:#d1fae5;color:#065f46;padding:2px 5px;border-radius:3px;margin:1px" title="P=0.71">.</span>
+</div>
+<div style="display:flex;gap:10px;margin-top:6px;font-size:.65rem">
+<span style="background:#d1fae5;color:#065f46;padding:2px 6px;border-radius:3px">■ Low entropy: keep original distribution (implicit retain)</span>
+<span style="background:#fecaca;color:#991b1b;padding:2px 6px;border-radius:3px;border:1px solid #fca5a5">■ High entropy: demote ground-truth logit → −∞</span>
+</div>
+</div>
+
+<!-- Arrow pointing down to bar charts -->
+<div style="display:flex;gap:40px;justify-content:center;font-size:0.92rem;color:var(--cardinal);font-weight:700;margin:2px 0">
+<div>▼ "<span style="color:var(--green)">name</span>" — low entropy → <span style="color:var(--green)">keep</span></div>
+<div>▼ "<span style="color:var(--red)">Hsiao</span>" — high entropy → <span style="color:var(--red)">demote</span></div>
+</div>
+
+<!-- Bar charts: green (retain) vs red (demote) -->
+<div style="display:flex;gap:12px;align-items:flex-end">
+
+<!-- GREEN: Low-entropy position — no demotion -->
+<div style="flex:1;text-align:center;background:rgba(26,122,58,.04);border:1px solid rgba(26,122,58,.2);border-radius:10px;padding:8px 6px">
+<div style="font-size:0.92rem;font-weight:700;color:var(--green);margin-bottom:6px">"name" — Low Entropy → Keep ✓</div>
+<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100px;padding:0 2px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--green)">0.78</div>
+<div style="width:26px;height:78px;background:var(--green);border-radius:3px 3px 0 0;opacity:.6"></div>
+<div style="font-size:.52rem;color:var(--green);font-weight:600">name</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.08</div>
+<div style="width:26px;height:8px;background:var(--surface3);border-radius:3px 3px 0 0;border:1px solid var(--border)"></div>
+<div style="font-size:.52rem;color:var(--dim)">title</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.06</div>
+<div style="width:26px;height:6px;background:var(--surface3);border-radius:3px 3px 0 0;border:1px solid var(--border)"></div>
+<div style="font-size:.52rem;color:var(--dim)">pen</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.08</div>
+<div style="width:26px;height:8px;background:var(--surface3);border-radius:3px 3px 0 0;border:1px solid var(--border)"></div>
+<div style="font-size:.52rem;color:var(--dim)">…</div>
+</div>
+</div>
+<div style="font-size:.6rem;color:var(--green);font-weight:600;margin-top:4px">No change → implicit retain</div>
+</div>
+
+<!-- RED: High-entropy position — demote -->
+<div style="flex:1;text-align:center">
+<div style="font-size:0.92rem;font-weight:700;color:var(--text);margin-bottom:6px">"Hsiao" — High Entropy (Original)</div>
+<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100px;padding:0 2px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.42</div>
+<div style="width:26px;height:84px;background:var(--red);border-radius:3px 3px 0 0;border:2px solid #a00"></div>
+<div style="font-size:.52rem;font-weight:600;color:var(--red)">Hsiao</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.20</div>
+<div style="width:26px;height:40px;background:var(--surface3);border-radius:3px 3px 0 0;border:1px solid var(--border)"></div>
+<div style="font-size:.52rem;color:var(--dim)">Philip</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.15</div>
+<div style="width:26px;height:30px;background:var(--surface3);border-radius:3px 3px 0 0;border:1px solid var(--border)"></div>
+<div style="font-size:.52rem;color:var(--dim)">the</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.23</div>
+<div style="width:26px;height:46px;background:var(--surface3);border-radius:3px 3px 0 0;border:1px solid var(--border)"></div>
+<div style="font-size:.52rem;color:var(--dim)">…</div>
+</div>
+</div>
+<div style="font-size:.6rem;color:var(--red);font-weight:600;margin-top:4px">Content token dominates ❌</div>
+</div>
+
+<!-- ARROW -->
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:16px">
+<div style="font-size:1.4rem;color:var(--cardinal);font-weight:700">→</div>
+</div>
+
+<!-- RED: After demotion -->
+<div style="flex:1;text-align:center;background:rgba(26,122,58,.04);border:1px solid rgba(26,122,58,.2);border-radius:10px;padding:8px 6px">
+<div style="font-size:0.92rem;font-weight:700;color:var(--green);margin-bottom:6px">After Demotion (KL Target)</div>
+<div style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100px;padding:0 2px">
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--dim)">0.00</div>
+<div style="width:26px;height:1px;background:#ccc;border-radius:3px 3px 0 0"></div>
+<div style="font-size:.52rem;color:var(--red);text-decoration:line-through">Hsiao</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--green)">0.35</div>
+<div style="width:26px;height:70px;background:var(--green);border-radius:3px 3px 0 0;opacity:.7"></div>
+<div style="font-size:.52rem;color:var(--green);font-weight:600">Philip</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--green)">0.26</div>
+<div style="width:26px;height:52px;background:var(--green);border-radius:3px 3px 0 0;opacity:.7"></div>
+<div style="font-size:.52rem;color:var(--green);font-weight:600">the</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:1px">
+<div style="font-size:.52rem;color:var(--green)">0.39</div>
+<div style="width:26px;height:78px;background:var(--green);border-radius:3px 3px 0 0;opacity:.7"></div>
+<div style="font-size:.52rem;color:var(--green);font-weight:600">…</div>
+</div>
+</div>
+<div style="font-size:.6rem;color:var(--green);font-weight:600;margin-top:4px">Redistributed naturally ✓</div>
+</div>
+
+</div>
+</div>
+
+<div data-frag="2" class="formula-box" style="margin-top:8px;max-width:900px">
+<div class="label">Training Objective</div>
+<p style="font-size:1.05rem;color:var(--text)"><span style="font-weight:700">L = KL(q<sub>target</sub> ‖ p<sub>model</sub>)</span> — single loss, <span class="green" style="font-weight:600">no separate retain set needed</span></p>
+</div>
+
+</div>
+
+<!-- 6: PIPELINE DIAGRAM -->
+<div class="slide" data-section="SHRED Method">
+<h2><span class="grad1">Training Pipeline</span></h2>
+<img src="shred_method_figure.png" style="max-width:1080px;max-height:560px;width:auto;border-radius:8px;border:1px solid var(--border)">
+</div>
+
+<!-- R1: FRONTIER -->
+<div class="slide" data-section="Results">
+<h2><span class="grad1">A New Forget&ndash;Utility Frontier &mdash; No Retain Set</span></h2>
+<img src="f3_main_results.png" style="width:100%;max-width:1160px;border-radius:8px;border:1px solid var(--border)">
+<p class="sub" style="margin-top:14px;font-size:1.15rem">SHRED (circles) is the <span class="accent">only method in the top-left corner on all four benchmarks</span></p>
+</div>
+
+<!-- R3: RELEARNING -->
+<div class="slide" data-section="Results">
+<h2><span class="grad1">Forgetting That Survives Relearning</span></h2>
+<img src="f7_relearning_attack.png" style="max-height:450px;max-width:760px;border-radius:8px;border:1px solid var(--border)">
+<p class="sub" style="margin-top:14px;font-size:1.15rem">200 fine-tune steps on 40 forget examples: <span class="green">SHRED +0.15</span> vs <span class="red">RMU +0.67 &middot; NPO +0.47</span> (oracle +0.05)</p>
+</div>
+
+<!-- R4: MIA -->
+<div class="slide" data-section="Results">
+<h2><span class="grad1">Robust Against Membership-Inference (MIA) Attacks</span></h2>
+<img src="muse_news_mia_bs.png" style="max-height:450px;max-width:760px;border-radius:8px;border:1px solid var(--border)">
+<p class="sub" style="margin-top:14px;font-size:1.15rem">Small-batch SHRED reaches <span class="green">PrivLeak &asymp; 0</span> (the oracle); retain-set baselines stay near &minus;100</p>
+</div>
+
+<!-- R5: CONTINUAL -->
+<div class="slide" data-section="Results">
+<h2><span class="grad1">Graceful Under Sequential Requests</span></h2>
+<img src="f6_sequential_unlearning.png" style="max-height:450px;max-width:760px;border-radius:8px;border:1px solid var(--border)">
+<p class="sub" style="margin-top:14px;font-size:1.15rem">Utility drops only <span class="green">~0.08 by round 3</span> &mdash; vs ~0.15 for NPO and RMU</p>
+</div>
+
+<!-- R6: P KNOB -->
+<div class="slide" data-section="Results">
+<h2><span class="grad1">One Knob (P) Controls the Trade-off</span></h2>
+<img src="hparam_demote_p.png" style="max-height:450px;max-width:760px;border-radius:8px;border:1px solid var(--border)">
+<p class="sub" style="margin-top:14px;font-size:1.15rem">Optimal at <span class="accent">P = 50&ndash;75%</span> (default 50%); P = 100% (UNDIAL-like) is strictly worse</p>
+</div>
+
+<!-- R7: EFFICIENCY -->
+<div class="slide" data-section="Results">
+<h2><span class="grad1">Deployment-Friendly Training</span></h2>
+<img src="efficient_training.png" style="max-height:450px;max-width:760px;border-radius:8px;border:1px solid var(--border)">
+<p class="sub" style="margin-top:14px;font-size:1.15rem"><span class="green">8-bit optimizer is free</span> &middot; small batch preserves utility &middot; <span class="orange">LoRA costs ~8 utility pts</span></p>
+</div>
+
+<!-- R2: UTILITY UP -->
+<div class="slide" data-section="Results">
+<h2><span class="grad1">Unlearning Improves Utility &mdash; Above Base <em>and</em> Oracle</span></h2>
+<p class="sub" style="margin-bottom:10px">Utility rises above <span class="accent">both</span> Full (base) and the retrained Target oracle. The Target was never trained on the forget set &mdash; so SHRED doesn't just <em>revert</em> fine-tuning, it <span class="accent">reduces hallucination in general</span>.</p>
+<div style="display:flex;gap:22px;align-items:center;justify-content:center;width:100%;max-width:1180px">
+  <img src="hallu_table.png" style="max-height:300px;max-width:540px;width:auto;border-radius:6px;border:1px solid var(--border)">
+  <img src="hallu_example.png" style="max-height:300px;max-width:620px;width:auto;border-radius:6px;border:1px solid var(--border)">
+</div>
+</div>
+
+<!-- 11: THANK YOU -->
+<div class="slide" data-section="Conclusion">
+<h1><span class="grad1">Thank You!</span></h1>
+<div class="divider" style="margin:28px auto"></div>
+<h2 style="font-size:1.8rem;font-weight:600;color:var(--dim);margin-top:8px">Questions & Discussion</h2>
+<div style="margin-top:32px;display:flex;gap:20px;justify-content:center">
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 24px;text-align:center">
+<p style="font-size:1.05rem;font-weight:600;color:var(--cardinal)">Next Steps</p>
+<p style="font-size:0.92rem;color:var(--dim);margin-top:4px">Efficient training &middot; Localization &middot; Hallucination reduction</p>
+</div>
+</div>
+<p style="text-align:center;font-size:1.18rem;color:var(--dim);margin-top:32px">Zizhao Hu · University of Southern California · 2026</p>
+</div>
+
+<div id="progress"></div>
+<div id="slideNum"></div>
+<div id="sectionLabel"></div>
+
+<script>
+// Auto-wrap each slide's children into a .slide-inner for scaling
+document.querySelectorAll('.slide').forEach(slide => {
+  const inner = document.createElement('div');
+  inner.className = 'slide-inner';
+  while (slide.firstChild) inner.appendChild(slide.firstChild);
+  slide.appendChild(inner);
+});
+
+// Scale slide-inner to fit current viewport (design at 1440x810)
+function scaleSlides() {
+  const DW = 1200, DH = 675, NAV = 60;            // reserve space for the top progress bar
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const scale = Math.min(vw / DW, (vh - NAV) / DH);
+  document.querySelectorAll('.slide-inner').forEach(inner => {
+    inner.style.transform = `translateY(${NAV/2}px) scale(${scale})`;  // push content below the bar
+  });
+}
+scaleSlides();
+window.addEventListener('resize', scaleSlides);
+
+// Slide navigation
+const slides = document.querySelectorAll('.slide');
+let cur = 0;
+slides[0].classList.add('active');
+document.getElementById('slideNum').textContent = '1 / '+slides.length;
+
+function go(n) {
+  if (n < 0 || n >= slides.length || n === cur) return;
+  const oldIdx = cur;
+  const forward = n > cur;
+  slides[oldIdx].classList.remove('active');
+  if (forward) slides[oldIdx].classList.add('prev');
+  setTimeout(() => slides[oldIdx].classList.remove('prev'), 500);
+  cur = n;
+  slides[cur].classList.add('active');
+  fragIdx = 0;
+  const frags = getFragGroups(cur);
+  frags.forEach(g => {
+    g.forEach(el => { if (!forward) el.classList.add('visible'); else el.classList.remove('visible'); });
+  });
+  if (!forward) fragIdx = frags.length;
+  document.getElementById('slideNum').textContent = (cur+1)+' / '+slides.length;
+  updateProgNav();
+  // Draw Plotly charts when entering slides
+  const tofuSlideIdx = Array.from(slides).findIndex(s => s.querySelector('#pareto-tofu-1b'));
+  if (cur === tofuSlideIdx) setTimeout(drawParetoTOFU, 200);
+  const convSlideIdx = Array.from(slides).findIndex(s => s.querySelector('#conv-chart'));
+  if (cur === convSlideIdx) setTimeout(drawConvChart, 200);
+}
+
+let fragIdx = 0;
+function getFragGroups(slideIdx) {
+  const els = Array.from(slides[slideIdx].querySelectorAll('[data-frag]'));
+  const groups = {};
+  els.forEach(el => {
+    const k = el.dataset.frag;
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(el);
+  });
+  return Object.keys(groups).sort((a,b) => a-b).map(k => groups[k]);
+}
+
+function advance() {
+  const frags = getFragGroups(cur);
+  if (fragIdx < frags.length) {
+    frags[fragIdx].forEach(el => el.classList.add('visible'));
+    fragIdx++;
+  } else {
+    go(cur + 1);
+  }
+}
+function retreat() {
+  const frags = getFragGroups(cur);
+  if (fragIdx > 0) {
+    fragIdx--;
+    frags[fragIdx].forEach(el => el.classList.remove('visible'));
+  } else {
+    go(cur - 1);
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); advance(); }
+  if (e.key==='ArrowLeft') { e.preventDefault(); retreat(); }
+  if (e.key==='Home') go(0);
+  if (e.key==='End') go(slides.length-1);
+});
+
+document.addEventListener('click', e => {
+  if (e.target.closest('button') || e.target.closest('input')) return;
+  if (e.clientX > window.innerWidth/2) advance(); else retreat();
+});
+
+// Progress nav bar
+function updateProgNav(){
+  const nav = document.getElementById('progNav');
+  if (cur === 0) { nav.classList.add('hidden'); return; }
+  nav.classList.remove('hidden');
+  const allSubs = Array.from(nav.querySelectorAll('.pn-sub'));
+  let activeSub = null;
+  for (const sub of allSubs) {
+    const slideList = sub.dataset.slides.split(',').map(Number);
+    if (slideList.includes(cur)) { activeSub = sub; break; }
+  }
+  const activePart = activeSub ? parseInt(activeSub.closest('.pn-part').dataset.part) : 0;
+  nav.querySelectorAll('.pn-label').forEach(el => {
+    const partNum = parseInt(el.closest('.pn-part').dataset.part);
+    el.classList.remove('active','done');
+    if (partNum === activePart) el.classList.add('active');
+    else if (partNum < activePart) el.classList.add('done');
+  });
+  allSubs.forEach(sub => {
+    const partNum = parseInt(sub.closest('.pn-part').dataset.part);
+    sub.classList.remove('active','done');
+    if (partNum < activePart) { sub.classList.add('done'); return; }
+    if (partNum > activePart) return;
+    if (sub === activeSub) { sub.classList.add('active'); }
+    else {
+      const partSubs = Array.from(sub.parentElement.querySelectorAll('.pn-sub'));
+      const myIdx = partSubs.indexOf(sub);
+      const activeIdx = partSubs.indexOf(activeSub);
+      if (myIdx < activeIdx) sub.classList.add('done');
+    }
+  });
+}
+updateProgNav();
+
+// ═══════ PLOTLY PARETO ═══════
+
+const tofuBaselines = [
+  { method: 'Full Model', prob: 0.880, rouge: 0.820, truth: 0.476, mu: 0.599, extract: 0.706, privleak: -99.46, isRef: true },
+  { method: 'Target (Retain90)', prob: 0.116, rouge: 0.379, truth: 0.627, mu: 0.591, extract: 0.059, privleak: 23.48, isRef: true },
+  { method: 'GradAscent', prob: 0.000, rouge: 0.000, truth: 0.534, mu: 0.000, isRef: false },
+  { method: 'GradDiff +RT', prob: 0.015, rouge: 0.276, truth: 0.511, mu: 0.436, isRef: false },
+  { method: 'NPO +RT', prob: 0.135, rouge: 0.305, truth: 0.573, mu: 0.557, extract: 0.113, privleak: -27.26 },
+  { method: 'DPO +RT', prob: 0.281, rouge: 0.076, truth: 0.533, mu: 0.578, extract: 0.142, privleak: -80.40 },
+  { method: 'RMU +RT', prob: 0.010, rouge: 0.110, truth: 0.704, mu: 0.578, extract: 0.036, privleak: 59.15 },
+  { method: 'SimNPO +RT', prob: 0.814, rouge: 0.698, truth: 0.466, mu: 0.598, extract: 0.492, privleak: -99.27 },
+  { method: 'SHRED (P=50)', prob: 0.116, rouge: 0.328, truth: 0.534, mu: 0.590, extract: 0.050, privleak: -38.58, isShred: true }
+];
+
+const shredSweep = {
+  25: [
+    {bs:1,prob:0.365,mu:0.589},{bs:2,prob:0.333,mu:0.591},{bs:4,prob:0.308,mu:0.594},
+    {bs:8,prob:0.291,mu:0.594},{bs:20,prob:0.282,mu:0.593},{bs:40,prob:0.281,mu:0.593}
+  ],
+  50: [
+    {bs:1,prob:0.143,mu:0.588},{bs:2,prob:0.116,mu:0.590},{bs:4,prob:0.099,mu:0.586},
+    {bs:8,prob:0.088,mu:0.581},{bs:20,prob:0.080,mu:0.581},{bs:40,prob:0.079,mu:0.578}
+  ],
+  75: [
+    {bs:1,prob:0.057,mu:0.561},{bs:2,prob:0.042,mu:0.560},{bs:4,prob:0.033,mu:0.554},
+    {bs:8,prob:0.028,mu:0.551},{bs:20,prob:0.024,mu:0.548},{bs:40,prob:0.023,mu:0.537}
+  ]
+};
+
+const tofu7bBaselines = [
+  { method: 'Full Model', prob: 0.990, rouge: 0.977, truth: 0.519, mu: 0.627, extract: 0.982, privleak: -99.83, isRef: true },
+  { method: 'Target (Retain90)', prob: 0.148, rouge: 0.399, truth: 0.680, mu: 0.612, extract: 0.070, privleak: 22.61, isRef: true },
+  { method: 'GradAscent', prob: 0.181, rouge: 0.690, truth: 0.564, mu: 0.454, extract: 0.404, privleak: -92.44 },
+  { method: 'GradDiff +RT', prob: 0.000, rouge: 0.025, truth: 0.000, mu: 0.625, extract: 0.000, privleak: 100.0 },
+  { method: 'NPO +RT', prob: 0.294, rouge: 0.562, truth: 0.637, mu: 0.557, extract: 0.205, privleak: -90.55 },
+  { method: 'RMU +RT', prob: 0.823, rouge: 0.865, truth: 0.532, mu: 0.608, extract: 0.727, privleak: -99.36 },
+  { method: 'SimNPO +RT', prob: 0.663, rouge: 0.673, truth: 0.519, mu: 0.613, extract: 0.480, privleak: -97.43 },
+  { method: 'SHRED P=50', prob: 0.064, rouge: 0.303, truth: 0.583, mu: 0.637, extract: 0.077, privleak: 81.44, isShred: true },
+];
+
+const blColors = {
+  'Full Model': '#555', 'Target (Retain90)': '#1a7a3a',
+  'GradAscent': '#D55E00', 'NPO +RT': '#56B4E9',
+  'DPO +RT': '#009E73', 'RMU +RT': '#F0E442', 'SimNPO +RT': '#CC79A7',
+  'GradDiff +RT': '#888',
+  'SHRED (P=50)': '#0072B2', 'SHRED P=50': '#0072B2'
+};
+const blSymbols = {
+  'Full Model': 'diamond', 'Target (Retain90)': 'star',
+  'GradAscent': 'x', 'NPO +RT': 'triangle-up', 'GradDiff +RT': 'triangle-down',
+  'DPO +RT': 'triangle-down', 'RMU +RT': 'pentagon', 'SimNPO +RT': 'hexagon',
+  'SHRED (P=50)': 'circle', 'SHRED P=50': 'circle'
+};
+const shredColors = { 25: '#66c2ff', 50: '#0072B2', 75: '#003f7f' };
+
+const baseLayoutOpts = {
+  plot_bgcolor: '#fafafa', paper_bgcolor: 'transparent',
+  xaxis: { title: 'Forget Probability ↓', color: '#555', gridcolor: '#e5e5e5', zeroline: false, range: [0, 1.0] },
+  legend: { font: { color: '#333', size: 9 }, bgcolor: 'rgba(255,255,255,0.7)', x: 0.98, y: 0.02, xanchor: 'right', yanchor: 'bottom' },
+  margin: { l: 40, r: 10, t: 30, b: 35 },
+  showlegend: false
+};
+
+let drawnPareto = false;
+function drawParetoTOFU() {
+  if (drawnPareto) return;
+  drawnPareto = true;
+
+  // 1B TRACES
+  const blTraces = tofuBaselines.filter(r => r.mu > 0.1 && !r.isShred).map(r => ({
+    x: [r.prob], y: [r.mu],
+    text: [`${r.method}<br>Prob=${r.prob} MU=${r.mu}`],
+    hoverinfo: 'text', mode: 'markers', name: r.method,
+    marker: { color: blColors[r.method] || '#ccc', size: r.isRef ? 11 : 8, symbol: blSymbols[r.method] || 'circle', line: { color: '#000', width: 1 } },
+    _order: r.isRef ? 1 : 0
+  }));
+
+  Object.entries(shredSweep).forEach(([p, pts]) => {
+    blTraces.push({
+      x: pts.map(d => d.prob), y: pts.map(d => d.mu),
+      text: pts.map(d => `SHRED P=${p}% BS=${d.bs}<br>Prob=${d.prob} MU=${d.mu}`),
+      hoverinfo: 'text', mode: 'lines+markers', name: `SHRED P=${p}%`,
+      line: { color: shredColors[p], width: 2, shape: 'spline' },
+      marker: { color: shredColors[p], size: 6, symbol: 'circle', line: { color: '#fff', width: 1 } }
+    });
+    blTraces.push({
+      x: [pts[0].prob], y: [pts[0].mu],
+      text: ['BS=1'], hoverinfo: 'skip', mode: 'text', showlegend: false,
+      textposition: 'middle right', textfont: { color: shredColors[p], size: 7 }
+    });
+    blTraces.push({
+      x: [pts[pts.length-1].prob], y: [pts[pts.length-1].mu],
+      text: ['BS=40'], hoverinfo: 'skip', mode: 'text', showlegend: false,
+      textposition: 'middle left', textfont: { color: shredColors[p], size: 7 }
+    });
+  });
+
+  blTraces.sort((a, b) => (a._order || 0) - (b._order || 0));
+  Plotly.newPlot('pareto-tofu-1b', blTraces, { ...baseLayoutOpts, title: { text: '1B: Forget Prob vs Utility', font: { size: 10, color: '#333' } }, yaxis: { title: 'Utility ↑', color: '#555', gridcolor: '#e5e5e5', zeroline: false, range: [0.42, 0.62] } }, { responsive: true, displayModeBar: false });
+
+  // 7B TRACES
+  const bl7bTraces = tofu7bBaselines.filter(r => typeof r.prob === 'number' && typeof r.mu === 'number').map(r => ({
+    x: [r.prob], y: [r.mu],
+    text: [`${r.method}<br>Prob=${r.prob} MU=${r.mu}`],
+    hoverinfo: 'text', mode: 'markers', name: r.method,
+    marker: { color: blColors[r.method] || '#ccc', size: r.isRef ? 11 : 8, symbol: blSymbols[r.method] || 'circle', line: { color: '#000', width: 1 } },
+    _order: r.isRef ? 1 : 0
+  }));
+  bl7bTraces.sort((a, b) => (a._order || 0) - (b._order || 0));
+
+  Plotly.newPlot('pareto-tofu-7b', bl7bTraces, { ...baseLayoutOpts, title: { text: '7B: Forget Prob vs Utility', font: { size: 10, color: '#333' } }, yaxis: { title: 'Utility ↑', color: '#555', gridcolor: '#e5e5e5', zeroline: false, range: [0.42, 0.66] } }, { responsive: true, displayModeBar: false });
+}
+
+const tofuSlideInit = Array.from(slides).findIndex(s => s.querySelector('#pareto-tofu-1b'));
+if (cur === tofuSlideInit) setTimeout(drawParetoTOFU, 300);
+
+// ═══════ CONVERGENCE CHART ═══════
+// P=50% LR=1e-5 — real per-1000-step checkpoint evals from CARC
+const ckptData = [
+  [1,0,0.880,0.599],[1,1000,0.425,0.585],[1,2000,0.278,0.587],[1,3000,0.232,0.587],
+  [1,4000,0.202,0.586],[1,5000,0.184,0.587],[1,6000,0.169,0.588],[1,7000,0.159,0.587],
+  [1,8000,0.152,0.588],[1,9000,0.145,0.586],[1,10000,0.143,0.588],[1,11000,0.141,0.588],[1,12000,0.141,0.588],
+  [2,0,0.880,0.599],[2,1000,0.310,0.599],[2,2000,0.216,0.595],[2,3000,0.173,0.595],
+  [2,4000,0.162,0.590],[2,5000,0.148,0.590],[2,6000,0.136,0.590],[2,7000,0.130,0.590],
+  [2,8000,0.122,0.589],[2,9000,0.119,0.592],[2,10000,0.117,0.593],[2,11000,0.116,0.589],[2,12000,0.116,0.590],
+  [4,0,0.880,0.599],[4,1000,0.241,0.602],[4,2000,0.178,0.593],[4,3000,0.146,0.591],
+  [4,4000,0.130,0.592],[4,5000,0.120,0.593],[4,6000,0.111,0.590],[4,7000,0.106,0.587],
+  [4,8000,0.103,0.588],[4,9000,0.101,0.585],[4,10000,0.100,0.587],[4,11000,0.099,0.586],[4,12000,0.099,0.586],
+  [8,0,0.880,0.599],[8,1000,0.198,0.598],[8,2000,0.147,0.593],[8,3000,0.124,0.588],
+  [8,4000,0.109,0.586],[8,5000,0.103,0.585],[8,6000,0.097,0.584],[8,7000,0.093,0.585],
+  [8,8000,0.090,0.583],[8,9000,0.088,0.580],[8,10000,0.088,0.582],[8,11000,0.088,0.582],[8,12000,0.088,0.581],
+  [20,0,0.880,0.599],[20,1000,0.159,0.591],[20,2000,0.118,0.585],[20,3000,0.103,0.586],
+  [20,4000,0.095,0.582],[20,5000,0.089,0.586],[20,6000,0.086,0.581],[20,7000,0.083,0.582],
+  [20,8000,0.082,0.579],[20,9000,0.081,0.584],[20,10000,0.081,0.580],[20,11000,0.081,0.578],[20,12000,0.080,0.580],
+  [40,0,0.880,0.599],[40,1000,0.146,0.590],[40,2000,0.109,0.585],[40,3000,0.098,0.585],
+  [40,4000,0.091,0.582],[40,5000,0.086,0.581],[40,6000,0.083,0.582],[40,7000,0.081,0.581],
+  [40,8000,0.081,0.579],[40,9000,0.080,0.577],[40,10000,0.079,0.579],[40,11000,0.079,0.579],[40,12000,0.079,0.578]
+];
+const ckptColors = { 1:'#e05c5c', 2:'#e6a817', 4:'#4db8e8', 8:'#8f7fd4', 20:'#e694d5', 40:'#39c9a3' };
+
+let drawnConv = false;
+function drawConvChart() {
+  if (drawnConv) return;
+  drawnConv = true;
+  const bsVals = [1, 2, 4, 8, 20, 40];
+  const traces = bsVals.map(bs => {
+    const pts = ckptData.filter(d => d[0] === bs).sort((a,b) => a[1]-b[1]);
+    return {
+      x: pts.map(d => d[1]), y: pts.map(d => d[2]),
+      text: pts.map(d => `BS=${bs} step=${d[1]}<br>Prob=${d[2].toFixed(3)} MU=${d[3].toFixed(3)}`),
+      hoverinfo: 'text', mode: 'lines+markers', name: `BS=${bs}`,
+      line: { color: ckptColors[bs], width: 2, shape: 'spline' },
+      marker: { color: ckptColors[bs], size: 3 }
+    };
+  });
+  traces.push({
+    x: [0, 12000], y: [0.116, 0.116], mode: 'lines', name: 'Retain90 Target',
+    line: { color: '#1a7a3a', width: 2, dash: 'dash' }, hoverinfo: 'skip'
+  });
+  Plotly.newPlot('conv-chart', traces, {
+    plot_bgcolor: '#fafafa', paper_bgcolor: 'transparent',
+    xaxis: { title: 'Training Steps', color: '#555', gridcolor: '#e5e5e5', zeroline: false, range: [0, 12000] },
+    yaxis: { title: 'Forget Prob ↓', color: '#555', gridcolor: '#e5e5e5', zeroline: false, range: [0, 0.95] },
+    legend: { font: { color: '#333', size: 8, family: 'Inter' }, bgcolor: 'rgba(255,255,255,0.8)', x: 0.98, y: 0.98, xanchor: 'right', yanchor: 'top', orientation: 'h', y: 1.02, xanchor: 'right', x: 1 },
+    margin: { l: 45, r: 8, t: 16, b: 35 }, showlegend: true
+  }, { responsive: true, displayModeBar: false });
+}
+const convSlideInit = Array.from(slides).findIndex(s => s.querySelector('#conv-chart'));
+if (cur === convSlideInit) setTimeout(drawConvChart, 300);
+</script>
+</body>
+</html>
