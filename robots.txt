@@ -2,4 +2,4 @@ User-Agent: *
 Allow: /
 Disallow: /brain
 
-Sitemap: https://zizhaohu.com/sitemap.xml
+Sitemap: https://zizhaoh.com/sitemap.xml
