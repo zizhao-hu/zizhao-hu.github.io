@@ -14691,7 +14691,7 @@ result.areaLightFresnel=data.Fresnel;result.areaLightSpecular=data.Specular;
 #endif
 result.areaLightDiffuse=data.Diffuse;result.LdotV=0.;result.roughness=0.;result.diffuseRoughness=0.;result.surfaceAlbedo=vec3f(0.);return result;}
 #endif
-`;r.v.IncludesShadersStoreWGSL[s]||(r.v.IncludesShadersStoreWGSL[s]=n)},85009:function(e,t,i){var r=i(84648);i(58420);let s="pbrFragmentExtraDeclaration",n=`varying vPositionW: vec3f;
+`;r.v.IncludesShadersStoreWGSL[s]||(r.v.IncludesShadersStoreWGSL[s]=n)},65640:function(e,t,i){var r=i(84648);i(58420);let s="pbrFragmentExtraDeclaration",n=`varying vPositionW: vec3f;
 #if DEBUGMODE>0
 varying vClipSpacePosition: vec4f;
 #endif
@@ -18312,7 +18312,7 @@ fragmentOutputs.color=textureSample(textureSampler,textureSamplerSampler, input.
 }
 `;r.v.ShadersStoreWGSL[s]||(r.v.ShadersStoreWGSL[s]=n);let a={name:s,shader:n}},84247:function(e,t,i){i.r(t),i.d(t,{oitBackBlendPixelShaderWGSL:function(){return a}});var r=i(84648);let s="oitBackBlendPixelShader",n=`var uBackColor: texture_2d<f32>;@fragment
 fn main(input: FragmentInputs)->FragmentOutputs {fragmentOutputs.color=textureLoad(uBackColor,vec2i(fragmentInputs.position.xy),0);if (fragmentOutputs.color.a==0.0) {discard;}}
-`;r.v.ShadersStoreWGSL[s]||(r.v.ShadersStoreWGSL[s]=n);let a={name:s,shader:n}},10710:function(e,t,i){i.r(t),i.d(t,{openpbrPixelShaderWGSL:function(){return Y}});var r=i(84648);i(30875),i(11331),i(83918),i(85009),i(38722),i(71191);let s="openpbrFragmentSamplersDeclaration",n=`#include<samplerFragmentDeclaration>(_DEFINENAME_,BASE_COLOR,_VARYINGNAME_,BaseColor,_SAMPLERNAME_,baseColor)
+`;r.v.ShadersStoreWGSL[s]||(r.v.ShadersStoreWGSL[s]=n);let a={name:s,shader:n}},10710:function(e,t,i){i.r(t),i.d(t,{openpbrPixelShaderWGSL:function(){return Y}});var r=i(84648);i(30875),i(11331),i(83918),i(65640),i(38722),i(71191);let s="openpbrFragmentSamplersDeclaration",n=`#include<samplerFragmentDeclaration>(_DEFINENAME_,BASE_COLOR,_VARYINGNAME_,BaseColor,_SAMPLERNAME_,baseColor)
 #include<samplerFragmentDeclaration>(_DEFINENAME_,BASE_WEIGHT,_VARYINGNAME_,BaseWeight,_SAMPLERNAME_,baseWeight)
 #include<samplerFragmentDeclaration>(_DEFINENAME_,BASE_DIFFUSE_ROUGHNESS,_VARYINGNAME_,BaseDiffuseRoughness,_SAMPLERNAME_,baseDiffuseRoughness)
 #include<samplerFragmentDeclaration>(_DEFINENAME_,BASE_METALNESS,_VARYINGNAME_,BaseMetalness,_SAMPLERNAME_,baseMetalness)
@@ -20097,7 +20097,7 @@ fragmentOutputs.color=textureSample(textureSampler,textureSamplerSampler,vec3f(u
 #ifdef NEGATIVEZ
 fragmentOutputs.color=textureSample(textureSampler,textureSamplerSampler,vec3f(uv,-1.001));
 #endif
-}`;r.v.ShadersStoreWGSL[s]||(r.v.ShadersStoreWGSL[s]=n);let a={name:s,shader:n}},48348:function(e,t,i){i.r(t),i.d(t,{pbrPixelShaderWGSL:function(){return Y}});var r=i(84648);i(30875),i(11331),i(49999),i(85009),i(38722),i(71191);let s="samplerFragmentAlternateDeclaration",n=`#ifdef _DEFINENAME_
+}`;r.v.ShadersStoreWGSL[s]||(r.v.ShadersStoreWGSL[s]=n);let a={name:s,shader:n}},48348:function(e,t,i){i.r(t),i.d(t,{pbrPixelShaderWGSL:function(){return Y}});var r=i(84648);i(30875),i(11331),i(49999),i(65640),i(38722),i(71191);let s="samplerFragmentAlternateDeclaration",n=`#ifdef _DEFINENAME_
 #if _DEFINENAME_DIRECTUV==1
 #define v_VARYINGNAME_UV vMainUV1
 #elif _DEFINENAME_DIRECTUV==2
