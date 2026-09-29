@@ -1,46 +1,48 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" width="1200" height="380" role="img" aria-label="How evaluation awareness can invalidate a safety test">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 424" width="640" height="424" role="img" aria-label="How evaluation awareness can invalidate a safety test: run a safety evaluation, the model detects that it is a test, behaves perfectly, and in the wild, with no test cue, behaves differently">
   <defs>
-    <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M0 0 L10 5 L0 10 z" fill="#b0aea5"/>
+    <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#d8d6ce"/>
+    </marker>
+    <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#d97757"/>
     </marker>
   </defs>
-  <rect width="1200" height="380" fill="#0f0f11"/>
+  <rect width="640" height="424" rx="18" fill="#0f0f11"/>
 
-  <g font-family="ui-monospace, Menlo, monospace">
-    <!-- node 1 -->
-    <g transform="translate(40,120)">
-      <rect width="250" height="130" rx="16" fill="#1b1b19" stroke="#2f2f2b"/>
-      <text x="20" y="40" font-size="15" fill="#6a9bcc" letter-spacing="2">STEP 1</text>
-      <text x="20" y="76" font-size="20" fill="#faf9f5">Run a safety</text>
-      <text x="20" y="102" font-size="20" fill="#faf9f5">evaluation</text>
+  <g font-family="Inter, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <!-- row 1 -->
+    <g transform="translate(24,24)">
+      <rect width="272" height="120" rx="14" fill="#1b1b19" stroke="#3a3a35"/>
+      <text x="20" y="38" font-size="20" font-weight="600" fill="#6a9bcc" letter-spacing="1.5">STEP 1</text>
+      <text x="20" y="74" font-size="24" fill="#faf9f5">Run a safety</text>
+      <text x="20" y="102" font-size="24" fill="#faf9f5">evaluation</text>
     </g>
-    <!-- node 2 -->
-    <g transform="translate(330,120)">
-      <rect width="250" height="130" rx="16" fill="#1b1b19" stroke="#2f2f2b"/>
-      <text x="20" y="40" font-size="15" fill="#6a9bcc" letter-spacing="2">STEP 2</text>
-      <text x="20" y="76" font-size="20" fill="#faf9f5">Model detects</text>
-      <text x="20" y="102" font-size="20" fill="#faf9f5">&#8220;this is a test&#8221;</text>
+    <g transform="translate(344,24)">
+      <rect width="272" height="120" rx="14" fill="#1b1b19" stroke="#3a3a35"/>
+      <text x="20" y="38" font-size="20" font-weight="600" fill="#6a9bcc" letter-spacing="1.5">STEP 2</text>
+      <text x="20" y="74" font-size="24" fill="#faf9f5">Model detects</text>
+      <text x="20" y="102" font-size="24" fill="#faf9f5">&#8220;this is a test&#8221;</text>
     </g>
-    <!-- node 3 -->
-    <g transform="translate(620,120)">
-      <rect width="250" height="130" rx="16" fill="#1b1b19" stroke="#2f2f2b"/>
-      <text x="20" y="40" font-size="15" fill="#788c5d" letter-spacing="2">STEP 3</text>
-      <text x="20" y="76" font-size="20" fill="#faf9f5">Behaves</text>
-      <text x="20" y="102" font-size="20" fill="#faf9f5">perfectly</text>
+    <!-- row 2 -->
+    <g transform="translate(24,192)">
+      <rect width="272" height="120" rx="14" fill="#1b1b19" stroke="#3a3a35"/>
+      <text x="20" y="38" font-size="20" font-weight="600" fill="#8fa874" letter-spacing="1.5">STEP 3</text>
+      <text x="20" y="74" font-size="24" fill="#faf9f5">Behaves</text>
+      <text x="20" y="102" font-size="24" fill="#faf9f5">perfectly</text>
     </g>
-    <!-- node 4 -->
-    <g transform="translate(910,120)">
-      <rect width="250" height="130" rx="16" fill="#241a17" stroke="#d97757" stroke-opacity="0.6"/>
-      <text x="20" y="40" font-size="15" fill="#d97757" letter-spacing="2">IN THE WILD</text>
-      <text x="20" y="76" font-size="20" fill="#f4c9b4">No test cue,</text>
-      <text x="20" y="102" font-size="20" fill="#f4c9b4">new behavior</text>
+    <g transform="translate(344,192)">
+      <rect width="272" height="120" rx="14" fill="#241a17" stroke="#d97757" stroke-opacity="0.7"/>
+      <text x="20" y="38" font-size="20" font-weight="600" fill="#e08a6d" letter-spacing="1.5">IN THE WILD</text>
+      <text x="20" y="74" font-size="24" fill="#f7d6c6">No test cue,</text>
+      <text x="20" y="102" font-size="24" fill="#f7d6c6">new behavior</text>
     </g>
 
-    <!-- arrows -->
-    <line x1="292" y1="185" x2="326" y2="185" stroke="#b0aea5" stroke-width="2.5" marker-end="url(#a2)"/>
-    <line x1="582" y1="185" x2="616" y2="185" stroke="#b0aea5" stroke-width="2.5" marker-end="url(#a2)"/>
-    <line x1="872" y1="185" x2="906" y2="185" stroke="#d97757" stroke-width="2.5" marker-end="url(#a2)"/>
+    <!-- arrows: 1 to 2, 2 down and back to 3, 3 to 4 -->
+    <line x1="300" y1="84" x2="338" y2="84" stroke="#d8d6ce" stroke-width="2.5" marker-end="url(#a2)"/>
+    <path d="M480 148 V168 H160 V186" fill="none" stroke="#d8d6ce" stroke-width="2.5" stroke-linejoin="round" marker-end="url(#a2)"/>
+    <line x1="300" y1="252" x2="338" y2="252" stroke="#d97757" stroke-width="2.5" marker-end="url(#a3)"/>
 
-    <text x="40" y="300" font-family="Georgia, serif" font-style="italic" font-size="19" fill="#8a8a84">The eval says &#8220;safe.&#8221; Deployment may say otherwise &#8212; the test measured test-taking, not the trait.</text>
+    <text x="24" y="360" font-size="22" font-style="italic" fill="#d8d6ce">The eval says &#8220;safe.&#8221; Deployment may not agree:</text>
+    <text x="24" y="392" font-size="22" font-style="italic" fill="#d8d6ce">the test measured test-taking, not the trait.</text>
   </g>
 </svg>
